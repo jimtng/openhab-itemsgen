@@ -1,0 +1,32 @@
+Thing mqtt:topic:mosquitto:<%= thingid %> "<%= label %>" (mqtt:broker:mosquitto) {
+    Channels:
+        Type switch : power	     [ stateTopic="stat/<%= thingid %>/RESULT", transformationPattern="REGEX:(.*POWER.*)∩JSONPATH:$.POWER", commandTopic="cmnd/<%= thingid %>/POWER" ]
+        Type dimmer : dimmer     [ stateTopic="stat/<%= thingid %>/RESULT", transformationPattern="REGEX:(.*Dimmer.*)∩JSONPATH:$.Dimmer", commandTopic="cmnd/<%= thingid %>/Dimmer" ]
+<% if key? 'ct' %>
+        Type dimmer : ct         [ stateTopic="stat/<%= thingid %>/RESULT", transformationPattern="REGEX:(.*CT.*)∩JSONPATH:$.CT", commandTopic="cmnd/<%= thingid %>/CT", min=153, max=500, step=1 ]
+<% end %>
+
+<% if key? 'color' %>
+        Type string : color      [ stateTopic="stat/<%= thingid %>/RESULT", transformationPattern="REGEX:(.*Color.*)∩JSONPATH:$.Color", commandTopic="cmnd/<%= thingid %>/Color" ]
+        Type colorHSB : colorhsb [ stateTopic="stat/<%= thingid %>/RESULT", transformationPattern="REGEX:(.*HSBColor.*)∩JSONPATH:$.HSBColor", commandTopic="cmnd/<%= thingid %>/HSBColor" ]
+<% end %>
+        Type number : rssi	                [ stateTopic="tele/<%= thingid %>/STATE", transformationPattern="JSONPATH:$.Wifi.RSSI" ]
+        Type string : state      [ stateTopic="tele/<%= thingid %>/dummy", commandTopic="cmnd/<%= thingid %>/STATE" ]
+        Type string : ipaddress [ stateTopic="stat/<%= thingid %>/STATUS5", transformationPattern="JSONPATH:$..StatusNET.IPAddress", commandTopic="cmnd/<%= thingid %>/status" ]
+        Type contact: availability [ stateTopic="tele/<%= thingid %>/LWT", on="Online", off="Offline" ]
+}
+
+Group <%= name %> "<%= label %>" <light> <%= groups&.groups %> <%= tags&.tags %> <%= metadata&.full_metadata %>
+
+Switch <%= name %>_Power  "<%= label %> Power" <light> <%= make_groups name, power['groups'] %> <%= make_tags %w[Light Power], power['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:power", autoupdate="false"<%= power['metadata']&.metadata %> }
+Dimmer <%= name %>_Dimmer "<%= label %>" <%= make_groups name, brightness['groups'] %> <%= make_tags %w[Control Brightness], brightness['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:dimmer"<%= brightness['metadata']&.metadata %> }
+<% if key? 'ct' %>
+Dimmer <%= name %>_CT     "<%= label %> CT" <%= make_groups name, ct['groups'] %> <%= make_tags %w[Control CT], ct['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:ct"<%= ct['metadata']&.metadata %> }
+<% end %>
+<% if key? 'color' %>
+String <%= name %>_Color  "<%= label %> Color" <colorwheel> <%= make_groups name, color['groups'] %> <%= make_tags %w[Control Color], color['tags'] %>  { channel="mqtt:topic:mosquitto:<%= thingid %>:colorhsb"<%= color['metadata']&.metadata %> }
+<% end %>
+Number <%= name %>_RSSI   "<%= label %> RSSI [%d%%]" <network> <%= make_groups name, 'gSignalStrength' %> { channel="mqtt:topic:mosquitto:<%= thingid %>:rssi" }
+String <%= name %>_State <%= make_groups name, 'gTasmotaState' %>     { channel="mqtt:topic:mosquitto:<%= thingid %>:state", id="<%= thingid %>" }
+String <%= name %>_IPAddress <%= make_groups name, 'gTasmotaIPs' %>     { channel="mqtt:topic:mosquitto:<%= thingid %>:ipaddress", autoupdate="false" }
+Contact <%= name %>_Availability "<%= label %> Availability [MAP(availability.map):%s]" <%= make_groups name, 'gAvailability' %> { channel="mqtt:topic:mosquitto:<%= thingid %>:availability" }

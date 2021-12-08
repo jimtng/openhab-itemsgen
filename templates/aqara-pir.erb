@@ -1,0 +1,14 @@
+Thing mqtt:topic:mosquitto:<%= thingid %> (mqtt:broker:mosquitto) {
+    Channels:
+        Type contact : occupancy    [ stateTopic="zigbee/<%= thingid %>/occupancy", on="true", off="false"  ]
+        Type number  : lux          [ stateTopic="zigbee/<%= thingid %>/illuminance_lux" ]
+        Type number  : linkquality  [ stateTopic="zigbee/<%= thingid %>/linkquality" ]
+        Type contact : availability [ stateTopic="zigbee/<%= thingid %>/availability", on="online", off="offline" ]
+        Type number  : battery      [ stateTopic="zigbee/<%= thingid %>/battery" ]
+}
+
+Contact <%= motion_item || name_parts[0] %>_Motion<%= suffix %>  "<%= room %> Motion<%= suffix %>" <motion> <%= groups&.groups %> <%= tags&.tags %>  { channel="mqtt:topic:mosquitto:<%= thingid %>:occupancy"<%= metadata&.metadata %> }
+Number  <%= name_parts[0] %>_Lux<%= suffix %>          "<%= room %> Lux<%= suffix %>"                             (gLux) { channel="mqtt:topic:mosquitto:<%= thingid %>:lux" }
+Number  <%= name %>_Link     "<%= label %> Link"      <network> (gSignalStrength) { channel="mqtt:topic:mosquitto:<%= thingid %>:linkquality" }
+Number  <%= name %>_Battery  "<%= label %> Battery [%d%%]" <battery> (gBatteries) { channel="mqtt:topic:mosquitto:<%= thingid %>:battery", expire="1h" }
+Contact <%= name %>_Availability "<%= label %> Availability [MAP(availability.map):%s]" (gAvailability) { channel="mqtt:topic:mosquitto:<%= thingid %>:availability" }
