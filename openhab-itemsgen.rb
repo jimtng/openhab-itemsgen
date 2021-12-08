@@ -57,10 +57,10 @@ class Device
     #   'name_parts' => name_parts
     # }.merge(@details)
 
-    template.result(binding)
+    template_obj.result(binding)
   end
 
-  def template
+  def template_obj
     Template.get(template_name)
   end
 
@@ -164,6 +164,7 @@ class Device
     [things.join("\n"), items.join("\n")]
   end
 
+  # rubocop: disable Metrics/MethodLength
   def self.align_items(items)
     regex = /
     ^\s*
@@ -178,6 +179,7 @@ class Device
     /x
     align_fields(items, regex)
   end
+  # rubocop: enable Metrics/MethodLength
 
   def self.align_things(things)
     regex = /
@@ -193,19 +195,32 @@ class Device
   end
 
   def self.align_fields(str, regex)
-    # Map items elements to a regex match array or a string when that line doesn't match pattern
-    matches = str.lines.map(&:chomp).map do |line|
-      match = regex.match(line)
-      match ? match.to_a[1, match.length].map(&:to_s) : line
-    end
+    # split lines into array of fields for each line, or a string it doesn't match the pattern
+    tokenized_lines = str.lines.map(&:chomp).map { |line| tokenize_line(line, regex) }
 
-    field_lengths = matches.grep(Array).transpose.map { |field| field.map(&:length) }.map(&:max)
-    field_lengths[-1] = 0 # don't pad the last field
+    field_widths = calculate_field_widths(tokenized_lines)
 
-    matches.map do |line|
-      line.is_a?(Array) ? line.each_with_index.map { |field, i| field.ljust(field_lengths[i]) }.join(' ') : line
-    end
-           .join("\n")
+    # reassemble the array of lines, padding each field to the max width of that field
+    tokenized_lines.map { |line| pad_line(line, field_widths) }.join("\n")
+  end
+
+  def self.tokenize_line(line, regex)
+    match = regex.match(line)
+    return match.to_a.slice(1, match.length).map(&:to_s) if match
+
+    line
+  end
+
+  def self.pad_line(line, field_widths)
+    line.is_a?(Array) ? line.each_with_index.map { |field, i| field.ljust(field_widths[i]) }.join(' ') : line
+  end
+
+  def self.calculate_field_widths(lines)
+    lines.grep(Array)
+         .transpose
+         .map { |field| field.map(&:length) }
+         .map(&:max)
+         .tap { |arr| arr[-1] = 0 } # don't pad the last field
   end
 end
 
@@ -292,10 +307,20 @@ end
 
 # Add helper methods to String
 class String
+  #
+  # Convert CamelCase_ID to "Camel Case ID"
+  #
+  # @return [String] the humanized version of the self
+  #
   def humanize
-    gsub(/[a-zA-Z](?=[A-Z])/, '\0 ').gsub('_', ' ')
+    gsub(/[a-z](?=[A-Z])/, '\0 ').gsub('_', ' ')
   end
 
+  #
+  # Enclose string with double quotes
+  #
+  # @return [String] string enclosed with double quotes
+  #
   def quote
     %("#{self}")
   end
