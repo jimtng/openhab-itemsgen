@@ -1,4 +1,10 @@
-LightRoom_Light:
+settings:
+  items:
+    output_file: example.items
+  things:
+    output_file: example.things
+
+Structure_Demonstration:
   template: example-template
   mygroups:
     - Group1
@@ -23,3 +29,40 @@ LightRoom_Light:
         - meta2: bar
     - name: Item2
       type: Dimmer
+      groups:
+        - Item2_Group
+
+# A simple light switch
+FrontPorch_Light:
+  template: tasmota-light
+
+  groups:
+    - gFrontPorch
+
+  power:
+    groups:
+      - gAllLights
+
+  ct: # empty entry to include the "ct" feature
+
+# A 2-gang wall switch
+LoungeRoom_Switch:
+  template: tasmota-switch
+  switches:
+    - name: LoungeRoom_Light1
+      label: Lounge Room TV Light
+      groups:
+        - gTVLights
+      metadata:
+        - Switch1="test"
+    - name: LoungeRoom_Light2
+      label: Lounge Room Play Light
+  # The template will include the following common properties on all switches
+  # in addition to the properties for each switch above
+  groups:
+    - gLoungeRoom
+  tags:
+    - Lightbulb # We assign this so it appears as a lightbulb in the semantic model
+  metadata:
+    - ga: Light
+    - alexa: Lighting
