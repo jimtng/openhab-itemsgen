@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'yaml'
 require 'erb'
 
@@ -13,28 +15,11 @@ class NilClass
   prepend TemplateNil
 end
 
-# Add helper methods to String
-class String
-  #
-  # Convert CamelCase_ID to "Camel Case ID"
-  #
-  # @return [String] the humanized version of the self
-  #
-  def humanize
-    gsub(/[a-z](?=[A-Z])/, '\0 ').gsub('_', ' ')
-  end
-
-  #
-  # Enclose string with double quotes
-  #
-  # @return [String] string enclosed with double quotes
-  #
-  def quote
-    %("#{self}")
-  end
-end
 # end
 
+#
+# Helper Methods that can be used inside a template
+#
 module HelperMethods
   def make_groups(*groups)
     enclose(groups.flatten.compact.uniq, outer: '()')
@@ -53,11 +38,13 @@ module HelperMethods
   # @return [String] the metadata string prefixed with a comma, suitable for adding to an existing metadata
   #
   def add_metadata(*meta)
-    metadata_array(meta).join(', ').tap { |metadata| metadata.prepend(', ') unless metadata.empty? }
+    metadata_array(meta.flatten.compact.uniq).join(', ').tap do |metadata|
+      metadata.prepend(', ') unless metadata.empty?
+    end
   end
 
   def make_metadata(*meta)
-    enclose(metadata_array(meta), outer: '{}')
+    enclose(metadata_array(meta.flatten.compact.uniq), outer: '{}')
   end
 
   def enclose(arr, outer:, inner: nil, delimiter: ', ')
@@ -68,6 +55,24 @@ module HelperMethods
        .tap { |str| str.prepend(outer[0]).concat(outer[1] || outer[0]) if outer }
   end
 
+  #
+  # Convert CamelCase_ID to "Camel Case ID"
+  #
+  # @return [String] the humanized version of the self
+  #
+  def humanize(str)
+    str.gsub(/[a-z](?=[A-Z])/, '\0 ').gsub('_', ' ')
+  end
+
+  #
+  # Enclose string with double quotes
+  #
+  # @return [String] string enclosed with double quotes
+  #
+  def quote(str)
+    %("#{str}")
+  end
+
   private
 
   def metadata_array(arr)
@@ -76,7 +81,7 @@ module HelperMethods
       when Hash then metadata_from_hash(entry)
       when String then entry
       end
-    end.compact.flatten.uniq
+    end.flatten
   end
 
   def metadata_from_hash(hash)
@@ -290,11 +295,11 @@ class Device
   end
 
   def label
-    @details['label'] || name.humanize
+    @details['label'] || humanize(name)
   end
 
   def room
-    @details['room'] || name_parts[0].humanize
+    @details['room'] || humanize(name_parts[0])
   end
 
   def name_parts
@@ -317,14 +322,18 @@ class Device
 end
 
 #
-# Process devices/settings hash
+# Process devices/settings
 # render each device into output
 # combine them, then write to file
 #
 class Devices
+  attr_accessor :items_header, :things_header
+
   def initialize(input_hash)
     @settings = input_hash.delete('settings')
     @devices = input_hash
+    @items_header = @settings&.dig('items', 'header') || ''
+    @things_header = @settings&.dig('things', 'header') || ''
   end
 
   #
@@ -340,8 +349,7 @@ class Devices
     output = render_devices(@devices)
 
     output.each do |type, value|
-      header = @settings&.dig(type, 'header') || ''
-      file_content = format_content(type, value).prepend(header)
+      file_content = format_content(type, value).prepend(header_for_type(type))
       output_file = output_files[type] || @settings&.dig(type, 'output_file')
       File.write(output_file, file_content)
     end
@@ -349,6 +357,14 @@ class Devices
   end
 
   private
+
+  def header_for_type(type)
+    case type
+    when 'items' then items_header
+    when 'things' then things_header
+    else ''
+    end
+  end
 
   def render_devices(devices)
     # map { id1 => details, id2 => details,...} hash into:
@@ -361,14 +377,16 @@ class Devices
 
   def format_content(type, content)
     content = content.join("\n\n")
-    content = Formatter.align_items(content) if type == 'items'
-    content = Formatter.align_things(content) if type == 'things'
-    content
+    case type
+    when 'items' then Formatter.align_items(content)
+    when 'things' then Formatter.align_things(content)
+    else content
+    end
   end
 end
 
-device_file = 'test.yaml'
-# device_file = 'example.yaml'
+# device_file = 'test.yaml'
+device_file = 'example.yaml'
 devices = YAML.load_file(device_file)
 Devices.new(devices).generate
 # Devices.new(devices).generate(things_file: 'example.things', items_file: 'example.items')
