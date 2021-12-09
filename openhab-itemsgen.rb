@@ -23,6 +23,134 @@ class Template
   end
 end
 
+# Splits the given multi-line string into things and items
+module Splitter
+  def self.things_items(src)
+    @things_nest_level = 0
+    @things = []
+    @items = []
+    @comments = []
+    process_src_lines(src)
+    [@things.join("\n"), @items.join("\n")]
+  end
+
+  def self.process_src_lines(src)
+    src.lines.map(&:rstrip).reject(&:empty?).each do |line|
+      case line
+      when %r{^\s*//}
+        process_comment(line)
+      when /^\s*(Thing|Bridge)\s+/
+        process_thing_bridge(line)
+      else
+        process_else(line)
+      end
+    end
+  end
+
+  def self.process_comment(line)
+    @comments << line
+  end
+
+  def self.process_thing_bridge(line)
+    @things.concat @comments.slice!(0..), [line]
+    @things_nest_level += 1 if line[-1] == '{'
+  end
+
+  def self.process_else(line)
+    if @things_nest_level.positive?
+      @things.concat @comments.slice!(0..), [line]
+      @things_nest_level -= 1 if line[-1] == '}'
+    else
+      @items.concat @comments.slice!(0..), [line]
+    end
+  end
+end
+
+#
+# Methods to format items and things file
+#
+module Formatter
+  # rubocop: disable Metrics/MethodLength
+  def self.align_items(items)
+    regex = /
+    ^\s*
+      (?<type>\S+)\s+
+      (?<name>\S+)\s+
+      (?<label>"[^"]*")?\s*
+      (?<icon><[^>]*>)?\s*
+      (?<group>\([^)]*\))?\s*
+      (?<tag>\[[^\]]*\])?\s*
+      (?<metadata>\{.*)?
+      $
+    /x
+    align_fields(items, regex) do |line|
+      return line unless line.is_a?(Array)
+
+      line[6] = format_metadata(line[6]) if line.length >= 7
+      line
+    end
+  end
+  # rubocop: enable Metrics/MethodLength
+
+  def self.align_things(things)
+    regex = /
+    ^(?<space>\s*)
+      (?<type_label>Type)\s+
+      (?<type>\S+)\s*
+      (?<colon>:)\s*
+      (?<name>\S+)?\s*
+      (?<params>\[.*)
+      $
+    /x
+    align_fields(things, regex)
+  end
+
+  #
+  # Align the fields within the string based on the given splitter regex
+  # Use the given block to format each field
+  #
+  # @param [String] str a multi-line string
+  # @param [Regexp] regex that splits the string into multiple fields
+  # @param [Block] &block an optional block that can format each field
+  #
+  # @return [String] return the string with its fields aligned
+  #
+  def self.align_fields(str, regex, &block)
+    # split lines into array of fields for each line, or a string if it doesn't match the pattern
+    tokenized_lines = str.lines.map(&:chomp).map { |line| split_line(line, regex) }
+
+    tokenized_lines = tokenized_lines.map(&block) if block_given?
+
+    field_widths = calculate_field_widths(tokenized_lines)
+
+    # reassemble the array of lines, padding each field to the max width of that field
+    tokenized_lines.map { |line| pad_line(line, field_widths) }.join("\n")
+  end
+
+  def self.split_line(line, regex)
+    match = regex.match(line)
+    match ? match.to_a.slice(1..).map(&:to_s) : line
+  end
+
+  def self.pad_line(line, field_widths)
+    line.is_a?(Array) ? line.each_with_index.map { |field, i| field.ljust(field_widths[i]) }.join(' ') : line
+  end
+
+  def self.calculate_field_widths(lines)
+    lines.grep(Array)
+         .transpose
+         .map { |field| field.map(&:length) }
+         .map(&:max)
+         .tap { |arr| arr[-1] = 0 } # don't pad the last field
+  end
+
+  ## TODO: nicely format the metadata, adding / removing excess spaces, etc
+  ## The metadata is in the format of { key="value", key2="value" [opt1="x", opt2="y"] }
+  def self.format_metadata(str)
+    str
+  end
+end
+
 # A class to render the template for one device
 # Also provides convenience methods to be used from inside the template
 # because ERB's binding is derived from this class' instance
@@ -45,7 +173,7 @@ class Device
   #
   def self.output(id, details)
     puts "Processing #{id} with template: #{details['template']}"
-    split_things_items Device.new(id, details).parse
+    Splitter.things_items Device.new(id, details).parse
   end
 
   def parse
@@ -110,93 +238,12 @@ class Device
   #
   # @return [String] the metadata string prefixed with a comma, suitable for adding to an existing metadata
   #
-  def make_metadata(*meta)
+  def add_metadata(*meta)
     meta.flatten.compact.metadata
   end
 
-  # Splits the given multi-line string into things and items
-  def self.split_things_items(src)
-    things_nest_level = 0
-    things = []
-    items = []
-    comments = []
-
-    src.lines.map(&:rstrip).reject(&:empty?).each do |line|
-      case line
-      when %r{^\s*//} then comments << line
-      when /^\s*(Thing|Bridge)\s+/
-        things.concat comments.slice!(0..), [line]
-        things_nest_level += 1 if line[-1] == '{'
-      else
-        if things_nest_level.positive?
-          things.concat comments.slice!(0..), [line]
-          things_nest_level -= 1 if line[-1] == '}'
-        else
-          items.concat comments.slice!(0..), [line]
-        end
-      end
-    end
-
-    [things.join("\n"), items.join("\n")]
-  end
-
-  # rubocop: disable Metrics/MethodLength
-  def self.align_items(items)
-    regex = /
-    ^\s*
-      (?<type>\S+)\s+
-      (?<name>\S+)\s+
-      (?<label>"[^"]*")?\s*
-      (?<icon><[^>]*>)?\s*
-      (?<group>\([^)]*\))?\s*
-      (?<tag>\[[^\]]*\])?\s*
-      (?<metadata>\{.*)?
-      $
-    /x
-    align_fields(items, regex)
-  end
-  # rubocop: enable Metrics/MethodLength
-
-  def self.align_things(things)
-    regex = /
-    ^(?<space>\s*)
-      (?<type_label>Type)\s+
-      (?<type>\S+)\s*
-      (?<colon>:)\s*
-      (?<name>\S+)?\s*
-      (?<params>\[.*)
-      $
-    /x
-    align_fields(things, regex)
-  end
-
-  def self.align_fields(str, regex)
-    # split lines into array of fields for each line, or a string it doesn't match the pattern
-    tokenized_lines = str.lines.map(&:chomp).map { |line| tokenize_line(line, regex) }
-
-    field_widths = calculate_field_widths(tokenized_lines)
-
-    # reassemble the array of lines, padding each field to the max width of that field
-    tokenized_lines.map { |line| pad_line(line, field_widths) }.join("\n")
-  end
-
-  def self.tokenize_line(line, regex)
-    match = regex.match(line)
-    return match.to_a.slice(1..).map(&:to_s) if match
-
-    line
-  end
-
-  def self.pad_line(line, field_widths)
-    line.is_a?(Array) ? line.each_with_index.map { |field, i| field.ljust(field_widths[i]) }.join(' ') : line
-  end
-
-  def self.calculate_field_widths(lines)
-    lines.grep(Array)
-         .transpose
-         .map { |field| field.map(&:length) }
-         .map(&:max)
-         .tap { |arr| arr[-1] = 0 } # don't pad the last field
+  def make_metadata(*meta)
+    meta.flatten.compact.complete_metadata
   end
 end
 
@@ -214,16 +261,14 @@ module TemplateArray
     uniq.enclose(outer: '[]', inner: '"')
   end
 
-  def metadata
+  def metadata(complete: false)
     return '' if empty?
 
-    metadata_array.join(', ').prepend(', ')
+    complete ? metadata_array.enclose(outer: '{}') : metadata_array.join(', ').prepend(', ')
   end
 
-  def full_metadata
-    return '' if empty?
-
-    metadata_array.enclose(outer: '{}')
+  def complete_metadata
+    metadata(complete: true)
   end
 
   def enclose(outer:, inner: nil, delimiter: ', ')
@@ -301,7 +346,16 @@ class Devices
     @devices = input_hash
   end
 
-  def generate
+  #
+  # Render the templates and write the output to the given file paths
+  # or use the paths from the template not specified
+  #
+  # @param [String] things_file path to the things file
+  # @param [String] items_file path to the items file
+  #
+  def generate(things_file: nil, items_file: nil)
+    output_file = { 'things' => things_file, 'items' => items_file }
+
     # map { id1 => details, id2 => details,...} hash into:
     # [ [rendered_things1, rendered_items2], [rendered_things2, rendered_items2], ... ]
     # then transpose it into:
@@ -313,15 +367,15 @@ class Devices
       header = @settings.dig(type, 'header') || ''
       file_content = format_content(type, value).prepend(header)
 
-      output_file = @settings[type]['output_file']
+      output_file = output_file[type] || @settings[type]['output_file']
       File.write(output_file, file_content)
     end
   end
 
   def format_content(type, content)
     content = content.join("\n\n")
-    content = Device.align_items(content) if type == 'items'
-    content = Device.align_things(content) if type == 'things'
+    content = Formatter.align_items(content) if type == 'items'
+    content = Formatter.align_things(content) if type == 'things'
     content
   end
 end
