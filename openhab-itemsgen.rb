@@ -49,14 +49,6 @@ class Device
   end
 
   def parse
-    # @details = {
-    #   'thingid' => thingid,
-    #   'name' => name,
-    #   'label' => label,
-    #   'room' => room,
-    #   'name_parts' => name_parts
-    # }.merge(@details)
-
     template_obj.result(binding)
   end
 
@@ -122,41 +114,25 @@ class Device
     meta.flatten.compact.metadata
   end
 
-  # Splits the given string into things and items
+  # Splits the given multi-line string into things and items
   def self.split_things_items(src)
-    current_section = nil
     things_nest_level = 0
-
     things = []
     items = []
     comments = []
 
-    src.lines.map(&:chomp).map(&:rstrip).grep_v(/^\s*$/).each do |line|
-      case line.lstrip
-      when %r{^//} # comment line
-        case current_section
-        when :things then things << line
-        when :items then items << line
-        else comments << line
-        end
-      when /^(Thing|Bridge)\s+/
-        things.concat comments
-        comments.clear
-        things << line
+    src.lines.map(&:rstrip).reject(&:empty?).each do |line|
+      case line
+      when %r{^\s*//} then comments << line
+      when /^\s*(Thing|Bridge)\s+/
+        things.concat comments.slice!(0..), [line]
         things_nest_level += 1 if line[-1] == '{'
-        current_section = :things
       else
         if things_nest_level.positive?
-          things << line
-          if line[-1] == '}'
-            things_nest_level -= 1
-            current_section = nil if things_nest_level.zero?
-          end
+          things.concat comments.slice!(0..), [line]
+          things_nest_level -= 1 if line[-1] == '}'
         else
-          current_section = :items
-          items.concat comments
-          comments.clear
-          items << line
+          items.concat comments.slice!(0..), [line]
         end
       end
     end
@@ -206,7 +182,7 @@ class Device
 
   def self.tokenize_line(line, regex)
     match = regex.match(line)
-    return match.to_a.slice(1, match.length).map(&:to_s) if match
+    return match.to_a.slice(1..).map(&:to_s) if match
 
     line
   end
@@ -254,18 +230,6 @@ module TemplateArray
     map { |entry| "#{inner}#{entry}#{inner}" }
       .join(delimiter)
       .tap { |str| str.prepend(outer[0]).concat(outer[1] || outer[0]) if outer }
-  end
-
-  #
-  # Override concat to allow nil
-  #
-  # @param [Array] other Other array or nil
-  #
-  # @return [Array] concatenated result
-  #
-  def concat(other)
-    other = [] if other.nil?
-    super
   end
 
   private
