@@ -1,6 +1,95 @@
 require 'yaml'
 require 'erb'
 
+# module TypePatches
+#
+# Ignore hash value access on non-existent variables
+#
+module TemplateNil
+  def [](key); end
+end
+
+class NilClass
+  prepend TemplateNil
+end
+
+# Add helper methods to String
+class String
+  #
+  # Convert CamelCase_ID to "Camel Case ID"
+  #
+  # @return [String] the humanized version of the self
+  #
+  def humanize
+    gsub(/[a-z](?=[A-Z])/, '\0 ').gsub('_', ' ')
+  end
+
+  #
+  # Enclose string with double quotes
+  #
+  # @return [String] string enclosed with double quotes
+  #
+  def quote
+    %("#{self}")
+  end
+end
+# end
+
+module HelperMethods
+  def make_groups(*groups)
+    enclose(groups.flatten.compact.uniq, outer: '()')
+  end
+
+  def make_tags(*tags)
+    enclose(tags.flatten.compact, outer: '[]', inner: '"')
+  end
+
+  #
+  # Convenience method to generate additional metadata from the given list of elements
+  # nil arguments are allowed and silently ignored
+  #
+  # @param [List] *meta a list of array, or individual elements that make up the metadata
+  #
+  # @return [String] the metadata string prefixed with a comma, suitable for adding to an existing metadata
+  #
+  def add_metadata(*meta)
+    metadata_array(meta).join(', ').tap { |metadata| metadata.prepend(', ') unless metadata.empty? }
+  end
+
+  def make_metadata(*meta)
+    enclose(metadata_array(meta), outer: '{}')
+  end
+
+  def enclose(arr, outer:, inner: nil, delimiter: ', ')
+    return '' if arr.empty?
+
+    arr.map { |entry| "#{inner}#{entry}#{inner}" }
+       .join(delimiter)
+       .tap { |str| str.prepend(outer[0]).concat(outer[1] || outer[0]) if outer }
+  end
+
+  private
+
+  def metadata_array(arr)
+    arr.map do |entry|
+      case entry
+      when Hash then metadata_from_hash(entry)
+      when String then entry
+      end
+    end.compact.flatten.uniq
+  end
+
+  def metadata_from_hash(hash)
+    hash.map do |key, value|
+      # if %w[true false].include? value
+      #   %(#{key}=#{value})
+      # else
+      %(#{key}="#{value}")
+      # end
+    end
+  end
+end
+
 # Template caching and path resolution
 class Template
   @templates = {}
@@ -84,9 +173,7 @@ module Formatter
       $
     /x
     align_fields(items, regex) do |line|
-      return line unless line.is_a?(Array)
-
-      line[6] = format_metadata(line[6]) if line.length >= 7
+      line[6] = format_metadata(line[6]) if line.is_a?(Array) && line.length >= 7
       line
     end
   end
@@ -133,7 +220,11 @@ module Formatter
   end
 
   def self.pad_line(line, field_widths)
-    line.is_a?(Array) ? line.each_with_index.map { |field, i| field.ljust(field_widths[i]) }.join(' ') : line
+    if line.is_a?(Array)
+      line.each_with_index.map { |field, i| field.ljust(field_widths[i]) }.reject(&:empty?).join(' ')
+    else
+      line
+    end
   end
 
   def self.calculate_field_widths(lines)
@@ -141,7 +232,7 @@ module Formatter
          .transpose
          .map { |field| field.map(&:length) }
          .map(&:max)
-         .tap { |arr| arr[-1] = 0 } # don't pad the last field
+         .tap { |arr| arr[-1] = 0 if arr.any? } # don't pad the last field
   end
 
   ## TODO: nicely format the metadata, adding / removing excess spaces, etc
@@ -156,6 +247,8 @@ end
 # because ERB's binding is derived from this class' instance
 # To use it, simply use the static Device.output method.
 class Device
+  include HelperMethods
+
   def initialize(id, details)
     raise KeyError, "No template was specified for #{id}" unless details['template']
 
@@ -221,118 +314,6 @@ class Device
   def respond_to_missing?(_method_name, _include_private = false)
     true
   end
-
-  def make_groups(*groups)
-    groups.flatten.compact.groups
-  end
-
-  def make_tags(*tags)
-    tags.flatten.compact.tags
-  end
-
-  #
-  # Convenience method to generate additional metadata from the given list of elements
-  # nil arguments are allowed and silently ignored
-  #
-  # @param [List] *meta a list of array, or individual elements that make up the metadata
-  #
-  # @return [String] the metadata string prefixed with a comma, suitable for adding to an existing metadata
-  #
-  def add_metadata(*meta)
-    meta.flatten.compact.metadata
-  end
-
-  def make_metadata(*meta)
-    meta.flatten.compact.complete_metadata
-  end
-end
-
-# Add convenience methods to array for building group, tag, and metadata elements
-module TemplateArray
-  def groups
-    return '' if empty?
-
-    uniq.enclose(outer: '()')
-  end
-
-  def tags
-    return '' if empty?
-
-    uniq.enclose(outer: '[]', inner: '"')
-  end
-
-  def metadata(complete: false)
-    return '' if empty?
-
-    complete ? metadata_array.enclose(outer: '{}') : metadata_array.join(', ').prepend(', ')
-  end
-
-  def complete_metadata
-    metadata(complete: true)
-  end
-
-  def enclose(outer:, inner: nil, delimiter: ', ')
-    map { |entry| "#{inner}#{entry}#{inner}" }
-      .join(delimiter)
-      .tap { |str| str.prepend(outer[0]).concat(outer[1] || outer[0]) if outer }
-  end
-
-  private
-
-  def metadata_array
-    map do |entry|
-      case entry
-      when Hash then metadata_from_hash(entry)
-      when String then entry
-      end
-    end.compact.flatten.uniq
-  end
-
-  def metadata_from_hash(hash)
-    hash.map do |key, value|
-      # if %w[true false].include? value
-      #   %(#{key}=#{value})
-      # else
-      %(#{key}="#{value}")
-      # end
-    end
-  end
-end
-
-class Array
-  prepend TemplateArray
-end
-
-#
-# Ignore hash value access on non-existent variables
-#
-module TemplateNil
-  def [](key); end
-end
-
-class NilClass
-  prepend TemplateNil
-end
-
-# Add helper methods to String
-class String
-  #
-  # Convert CamelCase_ID to "Camel Case ID"
-  #
-  # @return [String] the humanized version of the self
-  #
-  def humanize
-    gsub(/[a-z](?=[A-Z])/, '\0 ').gsub('_', ' ')
-  end
-
-  #
-  # Enclose string with double quotes
-  #
-  # @return [String] string enclosed with double quotes
-  #
-  def quote
-    %("#{self}")
-  end
 end
 
 #
@@ -354,22 +335,28 @@ class Devices
   # @param [String] items_file path to the items file
   #
   def generate(things_file: nil, items_file: nil)
-    output_file = { 'things' => things_file, 'items' => items_file }
+    output_files = { 'things' => things_file, 'items' => items_file }
 
+    output = render_devices(@devices)
+
+    output.each do |type, value|
+      header = @settings&.dig(type, 'header') || ''
+      file_content = format_content(type, value).prepend(header)
+      output_file = output_files[type] || @settings&.dig(type, 'output_file')
+      File.write(output_file, file_content)
+    end
+    puts "Processed #{@devices.length} entries"
+  end
+
+  private
+
+  def render_devices(devices)
     # map { id1 => details, id2 => details,...} hash into:
     # [ [rendered_things1, rendered_items2], [rendered_things2, rendered_items2], ... ]
     # then transpose it into:
     # [ [rendered_things1, rendered_things2, ...], [rendered_items1, rendered_items2, ...]]
-    output = @devices.map { |id, details| Device.output(id, details) }.transpose
-    output = { 'things' => output[0], 'items' => output[1] }
-
-    output.each do |type, value|
-      header = @settings.dig(type, 'header') || ''
-      file_content = format_content(type, value).prepend(header)
-
-      output_file = output_file[type] || @settings[type]['output_file']
-      File.write(output_file, file_content)
-    end
+    output = devices.map { |id, details| Device.output(id, details) }.transpose
+    { 'things' => output[0], 'items' => output[1] }
   end
 
   def format_content(type, content)
@@ -381,5 +368,7 @@ class Devices
 end
 
 device_file = 'test.yaml'
+# device_file = 'example.yaml'
 devices = YAML.load_file(device_file)
 Devices.new(devices).generate
+# Devices.new(devices).generate(things_file: 'example.things', items_file: 'example.items')
