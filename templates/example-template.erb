@@ -1,0 +1,4 @@
+<% list_in_array.each do |item| %>
+<%= item['type'] %> <%= item['name'] %> <%= make_groups item['groups'] %> <%= make_tags item['tags'] %> <%= make_metadata item['metadata'] %>
+
+<% end %>

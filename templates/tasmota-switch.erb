@@ -31,11 +31,11 @@ Thing mqtt:topic:mosquitto:<%= thingid %> (mqtt:broker:mosquitto) {
 
 <% switches.each.with_index(1) do |switch, index|  
         index = '' if switches.length == 1 %>
-Switch <%= switch['name'] %> <%= (switch['label'] || switch['name'])&.humanize&.quote %> <%= switch['icon'] || '<switch>' %> <%= make_groups groups, switch['groups'] %> <%= make_tags tags, switch['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:power<%= index %>", autoupdate="false"<%= make_metadata metadata, switch['metadata'] %> }
+Switch <%= switch['name'] %> <%= (switch['label'] || switch['name'])&.humanize&.quote %> <%= switch['icon'] || '<switch>' %> <%= make_groups groups, switch['groups'] %> <%= make_tags tags, switch['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:power<%= index %>", autoupdate="false"<%= add_metadata metadata, switch['metadata'] %> }
 <% end %>
 
 <% buttons&.each&.with_index(1) do |item, index| %>
-String <%= item['name'] %> <%= item['label']&.quote %> <%= item['groups']&.groups %> <%= item['tags']&.tags %> { channel="mqtt:topic:mosquitto:<%= thingid %>:button<%= index %>"<%= item['metadata']&.metadata %> }
+String <%= item['name'] %> <%= item['label']&.quote %> <%= make_groups item['groups'] %> <%= make_tags item['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:button<%= index %>"<%= add_metadata item['metadata'] %> }
 <% end %>
 
 Number <%= name %>_RSSI   "<%= label %> RSSI [%d%%]"  <network> (gSignalStrength)  { channel="mqtt:topic:mosquitto:<%= thingid %>:rssi" }

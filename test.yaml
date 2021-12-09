@@ -167,20 +167,170 @@ MasterBathRoom_Light:
 
   groups:
     - gMasterBathRoom
-  tags:
-    - Lightbulb
-  metadata:
-    - ga: Light
-    - alexa: Endpoint.Light
 
   power:
     groups:
       - gPresenceSimulators
       - gInsideLights
-    tags:
-      - Light
-      - Power
-    metadata:
-      - alexa:
 
+  ct: # empty entry to include the "ct" feature
+
+MasterBathRoom_PIR:
+  template: aqara-pir
+  groups:
+    - gMasterBathRoom
+  motion:
+    groups:
+      - gMotionSensors
+
+MasterBathRoom_Thermometer:
+  template: aqara-thermometer
+  groups:
+    - gMasterBathRoom
+
+##
+MasterBedRoom_Switch:
+  template: tasmota-switch
+  switches:
+    - name: MasterBedRoom_Light_Switch
+    - name: MasterBedRoom_Curtain_Switch
+    - name: MasterBedRoom_Hallway_Switch
+  buttons:
+    - name: MasterBedRoom_Lights_Button
+      groups:
+        - gLightButtons
+    - name: MasterBedRoom_Curtain_Button
+    - name: Hallway_MBR_Button
+      groups:
+        - gLightButtons
+      metadata:
+        - gLightButtons="Hallway_Light_Power" [ dimmer="Hallway_Light_Dimmer" ]
+
+MasterBedRoom_Light1:
+  template: tasmota-light
+  omit_assistant_metadata: true
+  groups:
+    - gMasterBedRoomLights
+  color:
   ct:
+
+MasterBedRoom_Light2:
+  template: tasmota-light
+  omit_assistant_metadata: true
+  groups:
+    - gMasterBedRoomLights
+  color:
+  ct:
+
+MasterBedRoom_Light3:
+  template: tasmota-light
+  omit_assistant_metadata: true
+  color:
+  ct:
+  groups:
+    - gMasterBedRoomLights
+
+MasterBedRoom_Light4:
+  template: tasmota-light
+  omit_assistant_metadata: true
+  color:
+  ct:
+  groups:
+    - gMasterBedRoomLights
+
+MasterBedRoom_Lights:
+  template: multi-channel-light
+  color:
+  ct:
+
+  groups:
+    - gMasterBedRoom
+
+  power:
+    groups:
+      - gInsideLights
+      - gPresenceSimulators
+
+  channels:
+    - masterbedroom-light1
+    - masterbedroom-light2
+    - masterbedroom-light3
+    - masterbedroom-light4
+
+##
+
+BedRoom1_PIR:
+  template: aqara-pir
+  thingid: br1-pir
+  groups:
+    - gBedRoom1
+    - gMotionSensors
+
+MasterBedRoom_Dimmer:
+  template: tradfri-simfonisk-dimmer
+  groups:
+    - RotaryKnobs
+    - gMasterBedRoom
+  tags:
+    - Control
+  metadata:
+    - controls: MasterBedRoom_Lights_Dimmer
+
+MasterBedRoom_CeilingFan:
+  template: tasmota-switch
+  switches:
+    - name: MasterBedRoom_CeilingFan_High
+      groups:
+        - gMasterBedRoom_CeilingFan
+    - name: MasterBedRoom_CeilingFan_Med
+      groups:
+        - gMasterBedRoom_CeilingFan
+    - name: MasterBedRoom_CeilingFan_Low
+      groups:
+        - gMasterBedRoom_CeilingFan
+  buttons:
+    - name: MasterBedRoom_CeilingFan_Button_High
+    - name: MasterBedRoom_CeilingFan_Button_Med
+    - name: MasterBedRoom_CeilingFan_Button_Low
+
+MasterBedRoom_Thermometer:
+  template: aqara-thermometer
+  groups:
+    - gMasterBedRoom
+  humidity_groups:
+    - gMasterBedRoom
+    - gIndoorHumidity
+
+# MasterBedRoom_Curtain:
+#   template: aqara-curtain-b1
+#   # label: Master Bed Room Cloacking Device
+#   metadata:
+#     - ga="Curtain"
+
+MasterBedRoom_Door:
+  template: aqara-contact
+  groups:
+    - gMasterBedRoom
+    - gExternalDoors
+  tags:
+    - Door
+
+Wardrobe_PIR:
+  template: aqara-pir
+  groups:
+    - gMasterBedRoom
+  motion:
+    groups:
+      - gMotionSensors
+
+Wardrobe_Light:
+  template: tasmota-switch
+  thingid: wardrobe-switch
+  switches:
+    - name: Wardrobe_Light
+      label: Wardrobe Light
+      groups:
+        - gInsideLights
+      metadata:
+        - ga: Light
+        - alexa: Lighting

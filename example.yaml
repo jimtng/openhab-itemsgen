@@ -1,0 +1,25 @@
+LightRoom_Light:
+  template: example-template
+  mygroups:
+    - Group1
+    - Group2
+  light:
+    light_tags:
+      - light_tag1
+      - light_tag2
+    light_groups:
+      - Light_Group1
+      - Light_Group2
+    metadata:
+      - ga: Light
+      - alexa: Lighting
+  list_in_array:
+    - name: Item1
+      type: Switch
+      tags:
+        - item1_tag1
+      metadata:
+        - meta1: foo
+        - meta2: bar
+    - name: Item2
+      type: Dimmer

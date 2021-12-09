@@ -18,24 +18,31 @@ Thing mqtt:topic:mosquitto:<%= thingid %> "<%= label %>" (mqtt:broker:mosquitto)
 
 <%
 
-# Return the assistant tags or empty string based on "assistant_tags" value from yaml
-def assistant_tags(str)
-  omit_assistant_tags ? '' : str
-end
-
+# Based on `omit_assistant_metadata` (from yaml), conditionally return
+# the given array or an empty array
+assistant = {
+  light: %w[ga="Light" alexa="Endpoint.Light"],
+  brightness: %w[ga="lightBrightness" alexa="BrightnessController.brightness"],
+  power: %w[ga="lightPower" alexa="Powercontroller.powerState"],
+  ct: %w{ga="lightColorTemperature" alexa="ColorTemperatureController.colorTemperatureInKelvin" [increment="10"]},
+  color: %w[ga="lightColor" alexa="ColorController.color"]
+}.transform_values { |metadata| omit_assistant_metadata ? [] : metadata }
 %>
 // Template: <%= template_name %>
 
-Group <%= name %> "<%= label %>" <light> <%= groups&.groups %> <%= make_tags 'Lightbulb', tags %> { <%= assistant_tags(%(ga="Light", alexa="Endpoint.Light")) %><%= metadata&.metadata %> }
+Group <%= name %> "<%= label %>" <light> <%= make_groups groups %> <%= make_tags 'Lightbulb', tags %> <%= make_metadata assistant[:light], metadata %> 
 
-Switch <%= name %>_Power  "<%= label %> Power" <light> <%= make_groups name, power['groups'] %> <%= make_tags %w[Control Power], power['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:power", autoupdate="false"<%= assistant_tags(%(, ga="lightPower", alexa="Powercontroller.powerState")) %><%= power['metadata']&.metadata %> }
-Dimmer <%= name %>_Dimmer "<%= label %>" <%= make_groups name, dimmer['groups'] %> <%= make_tags %w[Control Light], dimmer['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:dimmer"<%= assistant_tags(%(, ga="lightBrightness", alexa="BrightnessController.brightness")) %><%= dimmer['metadata']&.metadata %> }
+Switch <%= name %>_Power  "<%= label %> Power" <light> <%= make_groups name, power['groups'] %> <%= make_tags %w[Control Power], power['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:power", autoupdate="false"<%= add_metadata assistant[:power], power['metadata'] %> }
+Dimmer <%= name %>_Dimmer "<%= label %>" <%= make_groups name, dimmer['groups'] %> <%= make_tags %w[Control Light], dimmer['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:dimmer"<%= add_metadata assistant[:brightness], dimmer['metadata'] %> }
+
 <% if key? 'ct' %>
-Dimmer <%= name %>_CT     "<%= label %> CT" <%= make_groups name, ct['groups'] %> <%= make_tags %w[Control ColorTemperature], ct['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:ct"<%= assistant_tags(%(, ga="lightColorTemperature", alexa="ColorTemperatureController.colorTemperatureInKelvin" [increment="10"])) %><%= ct['metadata']&.metadata %> }
+Dimmer <%= name %>_CT     "<%= label %> CT" <%= make_groups name, ct['groups'] %> <%= make_tags %w[Control ColorTemperature], ct['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:ct"<%= add_metadata assistant[:ct], ct['metadata'] %> }
 <% end %>
+
 <% if key? 'color' %>
-Color <%= name %>_Color  "<%= label %> Color" <colorwheel> <%= make_groups name, color['groups'] %> <%= make_tags %w[Control Color], color['tags'] %>  { channel="mqtt:topic:mosquitto:<%= thingid %>:colorhsb"<%= assistant_tags(%(, ga="lightColor", alexa="ColorController.color")) %><%= color['metadata']&.metadata %> }
+Color <%= name %>_Color  "<%= label %> Color" <colorwheel> <%= make_groups name, color['groups'] %> <%= make_tags %w[Control Color], color['tags'] %>  { channel="mqtt:topic:mosquitto:<%= thingid %>:colorhsb"<%= add_metadata assistant[:color], color['metadata'] %> }
 <% end %>
+
 Number <%= name %>_RSSI   "<%= label %> RSSI [%d%%]" <network> <%= make_groups name, 'gSignalStrength' %>  { channel="mqtt:topic:mosquitto:<%= thingid %>:rssi" }
 String <%= name %>_State <%= make_groups name, 'gTasmotaState' %>     { channel="mqtt:topic:mosquitto:<%= thingid %>:state", id="<%= thingid %>" }
 String <%= name %>_IPAddress <%= make_groups name, 'gTasmotaIPs' %>     { channel="mqtt:topic:mosquitto:<%= thingid %>:ipaddress", autoupdate="false" }

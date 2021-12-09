@@ -10,12 +10,12 @@ Thing mqtt:topic:mosquitto:<%= thingid %> (mqtt:broker:mosquitto)  @ "Environmen
 
 // Template: <%= template_name %>
 
-Group <%= name %> "<%= label %>" <%= groups.groups %> <%= make_tags 'Sensor' %>
+Group <%= name %> "<%= label %>" <%= make_groups groups %> <%= make_tags 'Sensor' %>
 <%# Must add one extra line after the closing tag %>
 
-Number:Temperature <%= name_parts[0] %>_Temperature "<%= room %> Temperature" <temperature> <%= make_groups name, 'gTemperature' %> <%= make_tags %w[Measurement Temperature], temperature['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:temperature", ga="TemperatureSensor", alexa="TemperatureSensor.temperature"<%= temperature['metadata']&.metadata %> }
-Number             <%= name_parts[0] %>_Humidity "<%= room %> Humidity [%.1f%%]" <humidity> <%= make_groups name, 'gHumidity' %> <%= make_tags %w[Measurement Humidity], humidity['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:humidity", alexa="CurrentHumidity"<%= humidity['metadata']&.metadata %> }
-Number:Pressure    <%= name_parts[0] %>_Pressure "<%= room %> Pressure" <%= make_groups name %> <%= make_tags pressure['tags'] %> <%= make_tags %w[Measurement Pressure], pressure['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:pressure"<%= pressure['metadata']&.metadata %> }
+Number:Temperature <%= name_parts[0] %>_Temperature "<%= room %> Temperature" <temperature> <%= make_groups name, 'gTemperature' %> <%= make_tags %w[Measurement Temperature], temperature['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:temperature", ga="TemperatureSensor", alexa="TemperatureSensor.temperature"<%= add_metadata temperature['metadata'] %> }
+Number             <%= name_parts[0] %>_Humidity "<%= room %> Humidity [%.1f%%]" <humidity> <%= make_groups name, 'gHumidity' %> <%= make_tags %w[Measurement Humidity], humidity['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:humidity", alexa="CurrentHumidity"<%= add_metadata humidity['metadata'] %> }
+Number:Pressure    <%= name_parts[0] %>_Pressure "<%= room %> Pressure" <%= make_groups name %> <%= make_tags pressure['tags'] %> <%= make_tags %w[Measurement Pressure], pressure['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:pressure"<%= add_metadata pressure['metadata'] %> }
 Number             <%= name %>_Link    "<%= label %> Link" <network>  <%= make_groups name, 'gSignalStrength' %> { channel="mqtt:topic:mosquitto:<%= thingid %>:linkquality" }
 Number             <%= name %>_Battery "<%= label %> Battery [%d%%]" <battery> <%= make_groups name, 'gBatteries' %> { channel="mqtt:topic:mosquitto:<%= thingid %>:battery" }
 Contact            <%= name %>_Availability "<%= label %> Availability [MAP(availability.map):%s]" <%= make_groups name, 'gAvailability' %> { channel="mqtt:topic:mosquitto:<%= thingid %>:availability" }
