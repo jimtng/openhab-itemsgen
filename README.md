@@ -104,16 +104,16 @@ Contact <%= name %>_Availability "<%= label %> Availability [MAP(availability.ma
 
 ## Template Helpers
 
-### Array Methods
+### Helper Methods
 
-For ease of template writing and brevity, several helper methods are available for arrays:
+These helper methods accepts a list of arguments which can be a combination of String, Array of String, nil, or an empty array. When the resulting output is blank, it will not output the enclosing symbols (`()` for groups, `[]` for tags and `{}` for metadata)
 
-| Name                      | Output                                                                                              |
-| ------------------------- | --------------------------------------------------------------------------------------------------- |
-| `Array#groups`            | `(elem1, elem2, ...)`                                                                               |
-| `Array#tags`              | `["elem1", "elem2", ...]`                                                                           |
-| `Array#metadata`          | `, elem1, elem2, ...`<br/> If the element is a hash, it will be converted into `key="value"` syntax |
-| `Array#complete_metadata` | `{ elem1, elem2, ... }`                                                                             |
+| Method          | Description                                                                                                                                                                                                                                                                                                                                                               |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `make_groups`   | convert the supplied arguments into the groups syntax: comma separated and enclosed in parentheses, i.e. `(Group1, Group2)`                                                                                                                                                                                                                                               |
+| `make_tags`     | convert the supplied arguments into the tags syntax: each element is double quoted, comma separated and enclosed in square brackets, i.e. `("Tag1", "Tag2"]`                                                                                                                                                                                                              |
+| `make_metadata` | convert the supplied arguments into the metadata syntax: comma separated and enclosed in braces, i.e. `{xxx, yyy}`                                                                                                                                                                                                                                                        |
+| `add_metadata`  | If you've already had a hard coded metadata and would like to add more from an array, `add_metadata` will join the array with a comma and prepend it with a comma. Example: `{channel="this is a hard coded channel"<%= add_metadata 'elem1="somedata"', 'elem2="anotherthing"' %>}` => `{channel="this is a hard coded channel", elem1="somedata", elem2="anotherthing"` |
 
 #### Example:
 
@@ -121,21 +121,62 @@ Given a yaml structure:
 
 ```yaml
 LightRoom_Light:
+  template: example-template
   mygroups:
     - Group1
     - Group2
+  light:
+    light_tags:
+      - light_tag1
+      - light_tag2
+    light_groups:
+      - Light_Group1
+      - Light_Group2
+    metadata:
+      - ga: Light
+      - alexa: Lighting
+  list_in_array:
+    - name: Item1
+      type: Switch
+      tags:
+        - item1_tag1
+      metadata:
+        - meta1: foo
+        - meta2: bar
+    - name: Item2
+      type: Dimmer
 ```
 
-The template tag `<%= mygroups.groups %>` will render as: `(Group1, Group2)`
+The template tag:
 
-### Helper Methods
+| tag                                               | output                             |
+| ------------------------------------------------- | ---------------------------------- |
+| `<%= make_groups mygroups %>`                     | `(Group1, Group2)`                 |
+| `<%= make_groups 'HardCodedGroup', mygroups %>`   | `(HardCodedGroup, Group1, Group2)` |
+| `<%= make_groups light['light_groups'] %>`        | `(Light_Group1, Light_Group2)`     |
+| `<%= make_groups light['non_existent_entry'] %>`  | `<empty string>`                   |
+| `<%= make_tags light['light_tags'] %>`            | `["light_tag1", "light_tag2"]`     |
+| `<%= make_metadata light['metadata'] %>`          | `{ga="Light", alexa="Lighting"}`   |
+| `<%= add_metadata light['metadata'] %>`           | `, ga="Light", alexa="Lighting"`   |
+| `<%= add_metadata light['non_existent_entry'] %>` | `<empty string>`                   |
 
-| Method          | Description                                                                                                                                                                                                                                                                                                                                                                 |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `make_groups`   | Similar to `Array.groups` but it can combine any number of arguments of string/array. Example: `<%= make_groups 'GroupA', ['GroupB', 'GroupC'], mygroups %>` will produce `(GroupA, GroupB, GroupC, Group1, Group2)`                                                                                                                                                        |
-| `make_tags`     |                                                                                                                                                                                                                                                                                                                                                                             |
-| `add_metadata`  | If you've already had a hard coded metadata and would like to add more from an array, `add_metadata` will join the array with a comma and prepend it with a comma. Example: `{channel="this is a hard coded channel"<%= add_metadata ['elem1="somedata"', 'elem2="anotherthing"'] %>}` => `{channel="this is a hard coded channel", elem1="somedata", elem2="anotherthing"` |
-| `make_metadata` |                                                                                                                                                                                                                                                                                                                                                                             |
+We can loop through the `list_in_array` using ruby code
+
+`templates/example-template.erb`
+
+```ruby
+<% list_in_array.each do |item| %>
+<%= item['type'] %> <%= item['name'] %> <%= make_groups item['groups'] %> <%= make_tags item['tags'] %> <%= make_metadata item['metadata'] %>
+
+<% end %>
+```
+
+Output:
+
+```
+Switch Item1 ["item1_tag1"] {meta1="foo", meta2="bar"}
+Dimmer Item2
+```
 
 ### Predefined Variables
 
