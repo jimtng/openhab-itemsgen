@@ -27,6 +27,8 @@ Thing mqtt:topic:mosquitto:<%= thingid %> (mqtt:broker:mosquitto) {
         Type string : state     [ stateTopic="tele/<%= thingid %>/dummy", commandTopic="cmnd/<%= thingid %>/STATE" ]
 }
 
+// Template: <%= template_name %>
+
 <% switches.each.with_index(1) do |switch, index|  
         index = '' if switches.length == 1 %>
 Switch <%= switch['name'] %> <%= (switch['label'] || switch['name'])&.humanize&.quote %> <%= switch['icon'] || '<switch>' %> <%= make_groups groups, switch['groups'] %> <%= make_tags tags, switch['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:power<%= index %>", autoupdate="false"<%= make_metadata metadata, switch['metadata'] %> }

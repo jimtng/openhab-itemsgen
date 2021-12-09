@@ -6,6 +6,8 @@ Thing mqtt:topic:mosquitto:<%= thingid %> (mqtt:broker:mosquitto) {
         Type number : battery      [ stateTopic="zigbee/<%= thingid %>/battery" ]
 }
 
+// Template: <%= template_name %>
+
 Contact <%= name %>_State   "<%= label %>"  <<%= icon || 'door' %>>     <%= make_groups groups, 'gContactSensor' %> <%= tags&.tags %> { channel="mqtt:topic:mosquitto:<%= thingid %>:contact"<%= metadata&.metadata %> }
 Number  <%= name %>_Link    "<%= label %> Link"      <network> (gSignalStrength) { channel="mqtt:topic:mosquitto:<%= thingid %>:linkquality" }
 Number  <%= name %>_Battery "<%= label %> Battery [%d%%]" <battery> (gBatteries) { channel="mqtt:topic:mosquitto:<%= thingid %>:battery", expire="1h" }
