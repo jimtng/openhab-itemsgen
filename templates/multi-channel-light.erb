@@ -1,0 +1,28 @@
+<%# 
+This template doesn't include a 'thing' - because it is for an item that is linked to multiple channels. 
+The things / channels must be specified elsewhere
+%>
+
+// Template: <%= template_name %>
+
+<%
+
+def make_channels(name)
+  channels.map { |thingid| %(channel="mqtt:topic:mosquitto:#{thingid}:#{name}") }.join(', ')
+end
+
+%>
+
+Group <%= name %> "<%= label %>" <light> <%= groups&.groups %> <%= make_tags 'Lightbulb', tags %> { ga="Light", alexa="Endpoint.Light"<%= metadata&.metadata %> }
+
+Switch <%= name %>_Power  "<%= label %> Power" <light> <%= make_groups name, power['groups'] %> <%= make_tags %w[Control Power], power['tags'] %> { <%= make_channels('power') %>, autoupdate="false", ga="lightPower", alexa="Powercontroller.powerState"<%= power['metadata']&.metadata %> }
+Dimmer <%= name %>_Dimmer "<%= label %>" <%= make_groups name, dimmer['groups'] %> <%= make_tags %w[Control Light], dimmer['tags'] %> { <%= make_channels('dimmer') %>, ga="lightBrightness", alexa="BrightnessController.brightness"<%= dimmer['metadata']&.metadata %> }
+<% if key? 'ct' %>
+Dimmer <%= name %>_CT     "<%= label %> CT" <%= make_groups name, ct['groups'] %> <%= make_tags %w[Control ColorTemperature], ct['tags'] %> { <%= make_channels('ct') %>, ga="lightColorTemperature", alexa="ColorTemperatureController.colorTemperatureInKelvin" [increment="10"]<%= ct['metadata']&.metadata %> }
+<% end %>
+<% if key? 'color' %>
+Color <%= name %>_Color  "<%= label %> Color" <colorwheel> <%= make_groups name, color['groups'] %> <%= make_tags %w[Control Color], color['tags'] %>  { <%= make_channels('colorhsb') %>, ga="lightColor", alexa="ColorController.color"<%= color['metadata']&.metadata %> }
+<% end %>
+
+
+
