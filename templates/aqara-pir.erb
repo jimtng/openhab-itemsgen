@@ -9,7 +9,7 @@ Thing mqtt:topic:mosquitto:<%= thingid %> (mqtt:broker:mosquitto) {
 
 // Template: <%= template_name %>
 
-Contact <%= motion_item || name_parts[0] %>_Motion<%= suffix %>  "<%= room %> Motion<%= suffix %>" <motion> <%= make_groups groups, motion['groups'] %> <%= make_tags 'MotionDetector', motion['tags'] %>  { channel="mqtt:topic:mosquitto:<%= thingid %>:occupancy"<%= add_metadata metadata %> }
+Contact <%= name_parts[0] %>_Motion<%= suffix %>  "<%= room %> Motion<%= suffix %>" <motion> <%= make_groups groups, motion['groups'] %> <%= make_tags 'MotionDetector', motion['tags'] %>  { channel="mqtt:topic:mosquitto:<%= thingid %>:occupancy"<%= add_metadata metadata %> }
 Number  <%= name_parts[0] %>_Lux<%= suffix %> "<%= room %> Lux<%= suffix %>" <%= make_groups groups, lux['groups'], 'gLux' %> <%= make_tags 'Sensor', lux['tags'] %>  { channel="mqtt:topic:mosquitto:<%= thingid %>:lux" }
 Number  <%= name %>_Link     "<%= label %> Link"      <network> (gSignalStrength) { channel="mqtt:topic:mosquitto:<%= thingid %>:linkquality" }
 Number  <%= name %>_Battery  "<%= label %> Battery [%d%%]" <battery> (gBatteries) { channel="mqtt:topic:mosquitto:<%= thingid %>:battery", expire="1h" }
