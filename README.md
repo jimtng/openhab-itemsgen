@@ -10,7 +10,7 @@ Things and items definitions are usually repetitive when you have multiple devic
 
 ## Status
 
-- It works, but still in active development, not yet used in production
+- It works
 - This is a complete rewrite of [ohgen](https://github.com/jimtng/ohgen) with a few changes:
   - Rewritten in Ruby
   - Simplified yaml structure
@@ -156,6 +156,7 @@ These helper methods accepts a list of arguments which can be a combination of S
 | `make_tags`     | convert the supplied arguments into the tags syntax: each element is double quoted, comma separated and enclosed in square brackets, i.e. `("Tag1", "Tag2"]`                                                                                                                                                                                                              |
 | `make_metadata` | convert the supplied arguments into the metadata syntax: comma separated and enclosed in braces, i.e. `{xxx, yyy}`                                                                                                                                                                                                                                                        |
 | `add_metadata`  | If you've already had a hard coded metadata and would like to add more from an array, `add_metadata` will join the array with a comma and prepend it with a comma. Example: `{channel="this is a hard coded channel"<%= add_metadata 'elem1="somedata"', 'elem2="anotherthing"' %>}` => `{channel="this is a hard coded channel", elem1="somedata", elem2="anotherthing"` |
+| `quote`         | enclose the given string with a double quote, or return a blank, unquoted string when the argument is an empty string or nil                                                                                                                                                                                                                                              |
 
 #### Example:
 
@@ -191,16 +192,18 @@ LightRoom_Light:
 
 The template tag:
 
-| tag                                               | output                             |
-| ------------------------------------------------- | ---------------------------------- |
-| `<%= make_groups mygroups %>`                     | `(Group1, Group2)`                 |
-| `<%= make_groups 'HardCodedGroup', mygroups %>`   | `(HardCodedGroup, Group1, Group2)` |
-| `<%= make_groups light['light_groups'] %>`        | `(Light_Group1, Light_Group2)`     |
-| `<%= make_groups light['non_existent_entry'] %>`  | `<empty string>`                   |
-| `<%= make_tags light['light_tags'] %>`            | `["light_tag1", "light_tag2"]`     |
-| `<%= make_metadata light['metadata'] %>`          | `{ga="Light", alexa="Lighting"}`   |
-| `<%= add_metadata light['metadata'] %>`           | `, ga="Light", alexa="Lighting"`   |
-| `<%= add_metadata light['non_existent_entry'] %>` | `<empty string>`                   |
+| tag                                               | output                             | comment                                                          |
+| ------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------- |
+| `<%= make_groups mygroups %>`                     | `(Group1, Group2)`                 |                                                                  |
+| `<%= make_groups 'HardCodedGroup', mygroups %>`   | `(HardCodedGroup, Group1, Group2)` |                                                                  |
+| `<%= make_groups light['light_groups'] %>`        | `(Light_Group1, Light_Group2)`     |                                                                  |
+| `<%= make_groups light['non_existent_entry'] %>`  | `<empty string>`                   |                                                                  |
+| `<%= make_tags light['light_tags'] %>`            | `["light_tag1", "light_tag2"]`     |                                                                  |
+| `<%= make_metadata light['metadata'] %>`          | `{ga="Light", alexa="Lighting"}`   |                                                                  |
+| `<%= add_metadata light['metadata'] %>`           | `, ga="Light", alexa="Lighting"`   |                                                                  |
+| `<%= add_metadata light['non_existent_entry'] %>` | `<empty string>`                   |                                                                  |
+| `<%= quote label %>`                              | `"Living Room Light"`              | Note: `label` is a [predefined variable](#predefined-variables). |
+| `<%= quote light['non_existent_entry'] %>`        | `<empty string>`                   |                                                                  |
 
 We can loop through the `list_in_array` using ruby code
 
@@ -220,19 +223,30 @@ Switch Item1 ["item1_tag1"] {meta1="foo", meta2="bar"}
 Dimmer Item2
 ```
 
+Use the [safe navigation operator](https://ruby-doc.org/core-2.6/doc/syntax/calling_methods_rdoc.html#label-Safe+navigation+operator) (`&.`) if you aren't sure that the array exists (i.e. when it's optional). Note this is just standard Ruby.
+
+```ruby
+<% optional_var&.each do |item| %>
+<%= item['type'] %> <%= item['name'] %> <%= make_groups item['groups'] %> <%= make_tags item['tags'] %> <%= make_metadata item['metadata'] %>
+
+<% end %>
+```
+
 ### Predefined Variables
 
 Several predefined variables / methods are also available for the template. These variables are derived from the yaml device id, but they can be overridden by specifying an entry in the yaml.
 
-- `name`: the device id from the yaml, e.g. `LivingRoom_Light`
-- `label`: unless specified in the yaml, the name of the device converted to human readable, e.g. `LivingRoom_Light` => `Living Room Light`
-- `thingid`: unless specified in the yaml, a lower case version of `name`, with `_` converted to `-`
-- `room`: unless specified in the yaml, the first part of `name` before the underscore, converted to human readable, e.g. `Living Room`
-- `name_parts`: Split `name` parts delimited by underscores, e.g. `['LivingRoom', 'Light']`
+| variable     | description                                                                                        |
+| ------------ | -------------------------------------------------------------------------------------------------- |
+| `name`       | the device id from the yaml, e.g. `LivingRoom_Light`                                               |
+| `label`      | the name of the device converted to human readable, e.g. `LivingRoom_Light` => `Living Room Light` |
+| `thingid`    | a lower case version of `name`, with `_` converted to `-`                                          |
+| `room`       | the first part of `name` before the underscore, converted to human readable, e.g. `Living Room`    |
+| `name_parts` | Split `name` by underscores, e.g. `LivingRoom_Lux_Sensor` => `['LivingRoom', 'Lux', 'Sensor']`     |
 
 For example, to override `label` with your own custom label:
 
 ```yaml
-LivingRoom_Light:
-  label: My Groovy Light
+BedRoom1_Light:
+  label: Johnny's Bed Room Light
 ```
