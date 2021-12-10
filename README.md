@@ -24,7 +24,7 @@ Things and items definitions are usually repetitive when you have multiple devic
 - Easily add default icon, groups, tags, and metadata
 - Be as flexible or as simple as desired
 
-The list of your devices are maintained in a `devices.yaml` file. Example:
+The list of your devices are maintained in a `devices.yaml` file by default. Example:
 
 ```yaml
 settings:
@@ -190,4 +190,27 @@ Several predefined variables / methods are also available for the template. Thes
 
 Any of these variables can be overridden in yaml.
 
-TODO
+## Usage
+
+### Command Line Usage
+
+Execute `itemsgen.rb` from the command line
+
+```bash
+chmod 755 itemsgen.rb
+itemsgen.rb
+```
+
+The command line options will be printed out.
+
+### Usage from another ruby script
+
+```ruby
+require 'itemsgen'
+
+yaml = File.read('devices.yaml')
+gen = OpenhabGenerator::Devices.new(yaml)
+output = gen.generate
+File.write('output.things', output['things'])
+File.write('output.items', output['items'])
+```
