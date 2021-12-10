@@ -18,11 +18,49 @@ Things and items definitions are usually repetitive when you have multiple devic
 
 ## Features
 
-- things channels and items fields output are nicely aligned
-- Use the power of Ruby inside the template
+- Things channels and Items fields output are nicely aligned
+- Use the power of Ruby inside the erb template
 - Includes helper methods to make template writing easier
 - Easily add default icon, groups, tags, and metadata
 - Be as flexible or as simple as desired
+- It can be used from the command line or from another ruby script, e.g. within a openhab-jruby rule
+
+## Usage
+
+### Command Line Usage
+
+Execute `itemsgen.rb` from the command line
+
+```bash
+chmod 755 itemsgen.rb
+itemsgen.rb devices.yaml -f
+```
+
+The command line options will be printed out with `-h`:
+
+```
+Usage: ./itemsgen.rb [options] yamlfile
+    -t, --things THINGSFILE          The path to things file output
+    -i, --items  ITEMSFILE           The path to items file output
+    -v, --verbose                    Print details
+    -n, --dry-run                    Run process but do not write to output files
+    -f, --force                      Overwrite output files
+    -h, --help                       Print this help
+```
+
+When the output files are specified inside the yaml file, the `-t` and `-i` options are not required. When provided, they will override the yaml, however.
+
+### Usage from another ruby script
+
+```ruby
+require 'itemsgen'
+
+yaml = File.read('devices.yaml')
+gen = OpenhabGenerator::Devices.new(yaml)
+output = gen.generate
+File.write('output.things', output['things'])
+File.write('output.items', output['items'])
+```
 
 The list of your devices are maintained in a `devices.yaml` file by default. Example:
 
@@ -189,28 +227,3 @@ Several predefined variables / methods are also available for the template. Thes
 - `name_parts`: Split `name` parts delimited by underscores, e.g. `['LivingRoom', 'Light']`
 
 Any of these variables can be overridden in yaml.
-
-## Usage
-
-### Command Line Usage
-
-Execute `itemsgen.rb` from the command line
-
-```bash
-chmod 755 itemsgen.rb
-itemsgen.rb
-```
-
-The command line options will be printed out.
-
-### Usage from another ruby script
-
-```ruby
-require 'itemsgen'
-
-yaml = File.read('devices.yaml')
-gen = OpenhabGenerator::Devices.new(yaml)
-output = gen.generate
-File.write('output.things', output['things'])
-File.write('output.items', output['items'])
-```
