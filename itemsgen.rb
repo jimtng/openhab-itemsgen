@@ -437,12 +437,13 @@ if __FILE__ == $PROGRAM_NAME
     puts optparser.help
     exit(-1)
   end
-  yaml = YAML.load_file(ARGV[0])
+  yamlfile = ARGV[0]
+  yaml = YAML.load_file(yamlfile)
   device_count = 0
   gen = OpenhabGenerator::Devices.new(yaml)
   items_file = options[:items_file] || gen.items_file
   things_file = options[:things_file] || gen.things_file
-  gen.template_dir = options[:template_dir] # nil will use the default 'templates/' path
+  gen.template_dir = options[:template_dir] || File.join(File.dirname(yamlfile), 'templates')
   begin
     output = gen.generate do |id, details, _output|
       puts "Processed: #{id}, template: #{details['template']}" if options[:verbose]
