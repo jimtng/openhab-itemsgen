@@ -178,6 +178,18 @@ module OpenhabGenerator
   # Methods to format items and things file
   #
   module Formatter
+    #
+    # Align the fields in the items definition
+    #
+    # @param [String] items a multi-line string containing the items definition>
+    # @param [Block] block this block will be called for each line,
+    #                      which can be a string (e.g. comment) or an array of item elements
+    #                      line[0]: Item type
+    #                      line[1]: Item name
+    #                      Note the elements can vary depending on the fields that exist in the string
+    #
+    # @return [String] the formatted and aligned items definition multi-line string
+    #
     # rubocop: disable Metrics/MethodLength
     def self.align_items(items)
       regex = /
@@ -193,6 +205,7 @@ module OpenhabGenerator
       /x
       align_fields(items, regex) do |line|
         line[6] = format_metadata(line[6]) if line.is_a?(Array) && line.length >= 7
+        yield(line) if block_given?
         line
       end
     end
@@ -340,7 +353,7 @@ module OpenhabGenerator
   #
   class Devices
     attr_accessor :items_header, :things_header, :template_dir
-    attr_reader :output
+    attr_reader :output, :duplicate_items
 
     def initialize(input_hash)
       @settings = input_hash.delete('settings')
@@ -348,6 +361,7 @@ module OpenhabGenerator
       @items_header = @settings&.dig('items', 'header') || ''
       @things_header = @settings&.dig('things', 'header') || ''
       @output = {}
+      @duplicate_items = {}
     end
 
     #
@@ -394,11 +408,26 @@ module OpenhabGenerator
 
     def format_content(type, content)
       content = content.join("\n\n")
-      case type
-      when 'items' then Formatter.align_items(content)
-      when 'things' then Formatter.align_things(content)
-      else content
-      end
+      item_lines = []
+      result = case type
+               when 'items' then Formatter.align_items(content) { |line| item_lines << line }
+               when 'things' then Formatter.align_things(content)
+               else content
+               end
+
+      @duplicate_items = check_for_duplicate_items(item_lines)
+
+      result
+    end
+
+    def check_for_duplicate_items(items)
+      items.grep(Array)
+           .map { |field| field[1]&.strip } # Get the item name
+           .reject(&:empty?)
+           .group_by(&:itself) # this results in {item1=>[item1, item1], item2=>[item2, item2, item2]}
+           .map { |k, v| [k, v.size] if v.size > 1 } # converts to [ [item1, 2], [item2, 3] ]
+           .compact # remove non duplicates (nil)
+           .to_h # back to hash {item1=>2, item2=>3}
     end
   end
 end
@@ -477,4 +506,6 @@ if __FILE__ == $PROGRAM_NAME
       puts "#{entity[:name]} file not specified"
     end
   end
+
+  puts "WARNING: Duplicate items: #{gen.duplicate_items.keys.sort}" if gen.duplicate_items.any?
 end
