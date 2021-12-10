@@ -5,7 +5,6 @@ require 'yaml'
 require 'erb'
 
 module OpenhabGenerator
-  #
   # Helper Methods that can be used inside a template
   #
   module HelperMethods
@@ -13,6 +12,12 @@ module OpenhabGenerator
     #
     class ::NilClass
       def [](key); end
+    end
+
+    class ::Object
+      def blank?
+        respond_to?(:empty?) ? empty? : !self
+      end
     end
 
     def make_groups(*groups)
@@ -64,7 +69,7 @@ module OpenhabGenerator
     # @return [String] string enclosed with double quotes
     #
     def quote(str)
-      %("#{str}")
+      str.blank? ? '' : %("#{str}")
     end
 
     #
@@ -348,8 +353,7 @@ module OpenhabGenerator
 
   #
   # Process devices/settings
-  # render each device into output
-  # combine them, then write to file
+  # render each device into output and combine them
   #
   class Devices
     attr_accessor :items_header, :things_header, :template_dir
