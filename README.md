@@ -24,6 +24,7 @@ Things and items definitions are usually repetitive when you have multiple devic
 - Easily add default icon, groups, tags, and metadata
 - Be as flexible or as simple as desired
 - It can be used from the command line or from another ruby script, e.g. within a openhab-jruby rule
+- Detect duplicate items
 
 ## Usage
 
