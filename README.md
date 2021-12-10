@@ -32,23 +32,26 @@ Things and items definitions are usually repetitive when you have multiple devic
 Execute `itemsgen.rb` from the command line
 
 ```bash
-chmod 755 itemsgen.rb
-itemsgen.rb devices.yaml -f
+$ chmod 755 itemsgen.rb
+$ ./itemsgen.rb devices.yaml -f
 ```
 
 The command line options will be printed out with `-h`:
 
 ```
 Usage: ./itemsgen.rb [options] yamlfile
-    -t, --things THINGSFILE          The path to things file output
-    -i, --items  ITEMSFILE           The path to items file output
+    -t, --things THINGS_FILE         The path to things file output
+    -i, --items  ITEMS_FILE          The path to items file output
     -v, --verbose                    Print details
     -n, --dry-run                    Run process but do not write to output files
     -f, --force                      Overwrite output files
+    -d, --template-dir PATH          Path to look for the template files
     -h, --help                       Print this help
 ```
 
 When the output files are specified inside the yaml file, the `-t` and `-i` options are not required. When provided, they will override the yaml, however.
+
+When template-dir is not specified, it will look in the `templates/` subdirectory relative to the yaml file.
 
 ### Usage from another ruby script
 
