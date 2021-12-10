@@ -21,16 +21,17 @@ end
 
 %>
 // Template: <%= template_name %>
+<% group_name = "#{name}_Bulb" %>
 
-Group <%= name %> "<%= label %>" <light> <%= make_groups groups %> <%= make_tags 'Lightbulb', tags %>  <%= make_metadata assistant_tags(%w[ga="Light" alexa="Endpoint.Light"]), metadata %>
+Group <%= group_name %> "<%= label %>" <light> <%= make_groups groups %> <%= make_tags 'Lightbulb', tags %>  <%= make_metadata assistant_tags(%w[ga="Light" alexa="Endpoint.Light"]), metadata %>
 
-Switch <%= name %>_Power  "<%= label %> Power" <light> <%= make_groups name, power['groups'] %> <%= make_tags %w[Control Power], power['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:power", autoupdate="false"<%= add_metadata assistant_tags(%[ga="lightPower" alexa="Powercontroller.powerState"]), power['metadata'] %> }
-Dimmer <%= name %>_Dimmer "<%= label %>" <%= make_groups name, dimmer['groups'] %> <%= make_tags %w[Control Light], dimmer['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:dimmer"<%= add_metadata assistant_tags(%[ga="lightBrightness" alexa="BrightnessController.brightness"]), dimmer['metadata'] %> }
+Switch <%= name %>_Power  "<%= label %> Power" <light> <%= make_groups group_name, power['groups'] %> <%= make_tags %w[Control Power], power['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:power", autoupdate="false"<%= add_metadata assistant_tags(%[ga="lightPower" alexa="Powercontroller.powerState"]), power['metadata'] %> }
+Dimmer <%= name %>_Dimmer "<%= label %>" <%= make_groups group_name, dimmer['groups'] %> <%= make_tags %w[Control Light], dimmer['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:dimmer"<%= add_metadata assistant_tags(%[ga="lightBrightness" alexa="BrightnessController.brightness"]), dimmer['metadata'] %> }
 <% if key? 'ct' %>
-Dimmer <%= name %>_CT     "<%= label %> CT" <%= make_groups name, ct['groups'] %> <%= make_tags %w[Control ColorTemperature], ct['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:ct"<%= add_metadata assistant_tags(%{ga="lightColorTemperature" alexa="ColorTemperatureController.colorTemperatureInKelvin" [increment="10"]}), ct['metadata'] %> }
+Dimmer <%= name %>_CT     "<%= label %> CT" <%= make_groups group_name, ct['groups'] %> <%= make_tags %w[Control ColorTemperature], ct['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:ct"<%= add_metadata assistant_tags(%{ga="lightColorTemperature" alexa="ColorTemperatureController.colorTemperatureInKelvin" [increment="10"]}), ct['metadata'] %> }
 <% end %>
 <% if key? 'color' %>
-Color <%= name %>_Color  "<%= label %> Color" <colorwheel> <%= make_groups name, color['groups'] %> <%= make_tags %w[Control Color], color['tags'] %>  { channel="mqtt:topic:mosquitto:<%= thingid %>:colorhsb"<%= add_metadata assistant_tags(%{ga="lightColor" alexa="ColorController.color"}), color['metadata'] %> }
+Color <%= name %>_Color  "<%= label %> Color" <colorwheel> <%= make_groups group_name, color['groups'] %> <%= make_tags %w[Control Color], color['tags'] %>  { channel="mqtt:topic:mosquitto:<%= thingid %>:colorhsb"<%= add_metadata assistant_tags(%{ga="lightColor" alexa="ColorController.color"}), color['metadata'] %> }
 <% end %>
-Contact <%= name %>_Availability "<%= label %> Availability [MAP(availability.map):%s]" <%= make_groups name, 'gAvailability' %> { channel="mqtt:topic:mosquitto:<%= thingid %>:availability" }
+Contact <%= name %>_Availability "<%= label %> Availability [MAP(availability.map):%s]" <%= make_groups group_name, 'gAvailability' %> { channel="mqtt:topic:mosquitto:<%= thingid %>:availability" }
 
