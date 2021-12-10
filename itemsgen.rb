@@ -119,21 +119,15 @@ module OpenhabGenerator
   class Template
     @templates = {}
 
-    def self.get(name)
-      @templates[name] ||= load(name)
+    def self.get(name, template_dir: nil)
+      @templates[name] ||= load(name, template_dir)
     end
 
-    def self.load(name)
-      template = load_template_file(template_filename(name))
+    def self.load(name, template_dir)
+      template_dir ||= 'templates/'
+      filename = File.join(template_dir, "#{name}.erb")
+      template = File.read(filename)
       ERB.new(template, trim_mode: '%>')
-    end
-
-    def self.template_filename(name)
-      "templates/#{name}.erb"
-    end
-
-    def self.load_template_file(filename)
-      File.read(filename)
     end
   end
 
@@ -289,17 +283,16 @@ module OpenhabGenerator
     #
     # @return [Array] An array with two elements: [ rendered_things, rendered_items ]
     #
-    def self.output(id, details)
-      # puts "Processing #{id} with template: #{details['template']}"
-      Splitter.things_items Device.new(id, details).parse
+    def self.output(id, details, template_dir: nil)
+      Splitter.things_items Device.new(id, details).parse(template_dir: template_dir)
     end
 
-    def parse
-      template_obj.result(binding)
+    def parse(template_dir: nil)
+      template_obj(template_dir: template_dir).result(binding)
     end
 
-    def template_obj
-      Template.get(template_name)
+    def template_obj(template_dir: nil)
+      Template.get(template_name, template_dir: template_dir)
     end
 
     def template_name
@@ -346,7 +339,7 @@ module OpenhabGenerator
   # combine them, then write to file
   #
   class Devices
-    attr_accessor :items_header, :things_header
+    attr_accessor :items_header, :things_header, :template_dir
     attr_reader :output
 
     def initialize(input_hash)
@@ -393,7 +386,7 @@ module OpenhabGenerator
       # then transpose it into:
       # [ [rendered_things1, rendered_things2, ...], [rendered_items1, rendered_items2, ...]]
       output = devices.map do |id, details|
-        Device.output(id, details).tap { |out| yield(id, details, out) if block_given? }
+        Device.output(id, details, template_dir: @template_dir).tap { |out| yield(id, details, out) if block_given? }
       end.transpose
 
       { 'things' => output[0], 'items' => output[1] }
@@ -425,12 +418,13 @@ if __FILE__ == $PROGRAM_NAME
   options = {}
   optparser = OptionParser.new do |opt|
     opt.banner = "Usage: #{$PROGRAM_NAME} [options] yamlfile"
-    opt.on('-t', '--things THINGSFILE', 'The path to things file output') { |o| options[:things_file] = o }
-    opt.on('-i', '--items  ITEMSFILE', 'The path to items file output') { |o| options[:items_file] = o }
+    opt.on('-t', '--things THINGS_FILE', 'The path to things file output') { |o| options[:things_file] = o }
+    opt.on('-i', '--items  ITEMS_FILE', 'The path to items file output') { |o| options[:items_file] = o }
     opt.on('-v', '--verbose', 'Print details') { |o| options[:verbose] = o }
     opt.on('-n', '--dry-run', 'Run process but do not write to output files') { |o| options[:dry_run] = o }
     opt.on('-f', '--force', 'Overwrite output files') { |o| options[:force] = o }
-    opt.on('-h', '--help', 'Print this help') do |_o|
+    opt.on('-d', '--template-dir PATH', 'Path to look for the template files') { |o| options[:template_dir] = o }
+    opt.on('-h', '--help', 'Print this help') do
       puts opt
       exit(-1)
     end
@@ -448,15 +442,21 @@ if __FILE__ == $PROGRAM_NAME
   gen = OpenhabGenerator::Devices.new(yaml)
   items_file = options[:items_file] || gen.items_file
   things_file = options[:things_file] || gen.things_file
-  output = gen.generate do |id, details, _output|
-    puts "Procesing #{id}, template: #{details['template']}" if options[:verbose]
-    device_count += 1
+  gen.template_dir = options[:template_dir] # nil will use the default 'templates/' path
+  begin
+    output = gen.generate do |id, details, _output|
+      puts "Processed: #{id}, template: #{details['template']}" if options[:verbose]
+      device_count += 1
+    end
+  rescue Errno::ENOENT => e
+    puts e.message
+    exit(-1)
   end
 
-  puts "Processed #{device_count} entries" if options[:verbose]
+  puts "Finished processing #{device_count} entries" if options[:verbose]
 
   if options[:dry_run]
-    puts 'Dry run specified. Skip writing output file'
+    puts 'Dry run specified. Skip writing to output file.'
     exit 0
   end
 
@@ -471,7 +471,7 @@ if __FILE__ == $PROGRAM_NAME
     if entity[:file]
       exit(-1) unless overwrite_ok? entity[:file], options[:force]
       File.write(entity[:file], entity[:data])
-      puts "#{entity[:name]} file written to #{entity[:file]}"
+      puts "#{entity[:name]} written to #{entity[:file]}"
     else
       puts "#{entity[:name]} file not specified"
     end
