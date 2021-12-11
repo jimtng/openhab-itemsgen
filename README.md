@@ -146,9 +146,13 @@ Contact <%= name %>_Availability "<%= label %> Availability [MAP(availability.ma
 
 ## Template Helpers
 
+### Standard Ruby Methods
+
+All the standard Ruby methods are available within the template. For example, all the [String](https://ruby-doc.org/core-2.6/String.html) methods can be used, e.g. `<%= name.downcase %>`
+
 ### Helper Methods
 
-These helper methods accepts a list of arguments which can be a combination of String, Array of String, nil, or an empty array. When the resulting output is blank, it will not output the enclosing symbols (`()` for groups, `[]` for tags and `{}` for metadata)
+These helper methods are available to make writing templates easier. They accept a list of arguments which can be a combination of String, Array of String, nil, or an empty array. When the resulting output is blank, it will not output the enclosing symbols (`()` for groups, `[]` for tags and `{}` for metadata)
 
 | Method          | Description                                                                                                                                                                                                                                                                                                                                                               |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
