@@ -60,7 +60,7 @@ module OpenhabGenerator
     # @return [String] the humanized version of the self
     #
     def humanize(str)
-      str.gsub(/[a-z](?=[A-Z])/, '\0 ').gsub('_', ' ')
+      str.gsub(/[a-z](?=[0-9A-Z])/, '\0 ').gsub('_', ' ')
     end
 
     #
