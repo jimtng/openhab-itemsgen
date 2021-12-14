@@ -60,7 +60,7 @@ module OpenhabGenerator
     # @return [String] the humanized version of the self
     #
     def humanize(str)
-      str.gsub(/[a-z](?=[0-9A-Z])/, '\0 ').gsub('_', ' ')
+      str.gsub(/[a-z](?=[A-Z])/, '\0 ').gsub('_', ' ')
     end
 
     #
@@ -104,9 +104,9 @@ module OpenhabGenerator
       arr.map do |entry|
         case entry
         when Hash then metadata_from_hash(entry)
-        when String then entry
+        when String then entry unless entry.empty?
         end
-      end.flatten
+      end.flatten.compact
     end
 
     def metadata_from_hash(hash)
