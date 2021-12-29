@@ -124,6 +124,14 @@ module OpenhabGenerator
   class Template
     @templates = {}
 
+    #
+    # Return a cached ERB instance for the given template
+    #
+    # @param [String] name The template name without extension
+    # @param [String] template_dir the directory to look for template files
+    #
+    # @return [Object] ERB object for the given template
+    #
     def self.get(name, template_dir: nil)
       @templates[name] ||= load(name, template_dir)
     end
@@ -150,14 +158,12 @@ module OpenhabGenerator
     def self.process_src_lines(src)
       src.lines.map(&:rstrip).reject(&:empty?).each do |line|
         case line
-        when %r{^\s*//}
-          process_comment(line)
-        when /^\s*(Thing|Bridge)\s+/
-          process_thing_bridge(line)
-        else
-          process_else(line)
+        when %r{^\s*//} then process_comment(line)
+        when /^\s*(Thing|Bridge)\s+/ then process_thing_bridge(line)
+        else process_else(line)
         end
       end
+      process_trailing_comments
     end
 
     def self.process_comment(line)
@@ -176,6 +182,11 @@ module OpenhabGenerator
       else
         @items.concat @comments.slice!(0..), [line]
       end
+    end
+
+    def self.process_trailing_comments
+      @items.concat @comments.slice!(0..) if @comments.any? && @items.any?
+      @things.concat @comments
     end
   end
 
@@ -257,11 +268,9 @@ module OpenhabGenerator
     end
 
     def self.pad_line(line, field_widths)
-      if line.is_a?(Array)
-        line.each_with_index.map { |field, i| field.ljust(field_widths[i]) }.reject(&:empty?).join(' ')
-      else
-        line
-      end
+      return line unless line.is_a? Array
+
+      line.each_with_index.map { |field, i| field.ljust(field_widths[i]) }.reject(&:empty?).join(' ')
     end
 
     def self.calculate_field_widths(lines)
@@ -360,6 +369,8 @@ module OpenhabGenerator
     attr_reader :output, :duplicate_items
 
     def initialize(input_hash)
+      raise ArgumentError, 'Argument must be a hash' unless input_hash.is_a? Hash
+
       @settings = input_hash.delete('settings')
       @devices = input_hash
       @items_header = @settings&.dig('items', 'header') || ''
