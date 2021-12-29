@@ -66,6 +66,28 @@ File.write('output.things', output['things'])
 File.write('output.items', output['items'])
 ```
 
+Example jruby rule to automatically generate things/file when the yaml file is modified:
+
+```ruby
+require 'openhab'
+require 'personal/itemsgen'
+
+# Place the devices.yaml and the templates directory in CONF/items/
+
+rule 'Autogen Items' do
+  watch __conf__ / 'items/devices.yaml', :for => :modified
+  run do |event|
+    logger.info("#{event.path} #{event.type}. Regenerating things/items file.")
+    yaml = YAML.load_file(event.path)
+    gen = OpenhabGenerator::Devices.new(yaml)
+    gen.template_dir = __conf__ / 'items/templates'
+    output = gen.generate
+    File.write(__conf__ / 'things/z_generated.things', output['things'])
+    File.write(__conf__ / 'items/z_generated.items', output['items'])
+  end
+end
+```
+
 The list of your devices are maintained in a `devices.yaml` file by default. Example:
 
 ```yaml
