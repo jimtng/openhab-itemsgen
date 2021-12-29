@@ -59,7 +59,7 @@ When template-dir is not specified, it will look in the `templates/` subdirector
 ```ruby
 require 'itemsgen'
 
-yaml = File.read('devices.yaml')
+yaml = YAML.load_file('devices.yaml')
 gen = OpenhabGenerator::Devices.new(yaml)
 output = gen.generate
 File.write('output.things', output['things'])
