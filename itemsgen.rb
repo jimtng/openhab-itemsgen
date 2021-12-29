@@ -121,7 +121,7 @@ module OpenhabGenerator
   end
 
   # Template caching and path resolution
-  class Template
+  class Templates
     @templates = {}
 
     #
@@ -326,7 +326,7 @@ module OpenhabGenerator
     end
 
     def template_obj(template_dir: nil)
-      Template.get(template_name, template_dir: template_dir)
+      Templates.get(template_name, template_dir: template_dir)
     end
 
     def template_name
@@ -389,7 +389,6 @@ module OpenhabGenerator
       @things_header = @settings&.dig('things', 'header') || ''
       @output = {}
       @duplicate_items = {}
-      Template.clear
     end
 
     #
@@ -399,9 +398,10 @@ module OpenhabGenerator
     # @return [Hash] returns the generated items and things as { 'things' => data, 'items' => data }
     #
     def generate
-      render_devices(@devices) { |id, data, output| yield(id, data, output) if block_given? }.map do |type, value|
-        [type, format_content(type, value).prepend(header_for_type(type))]
-      end.to_h
+      render_devices(@devices) { |id, data, output| yield(id, data, output) if block_given? }
+        .map { |type, value| [type, format_content(type, value).prepend(header_for_type(type))] }
+        .to_h
+        .tap { Templates.clear }
     end
 
     def items_file
