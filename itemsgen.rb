@@ -136,6 +136,13 @@ module OpenhabGenerator
       @templates[name] ||= load(name, template_dir)
     end
 
+    #
+    # Clears template cache
+    #
+    def self.clear
+      @templates.clear
+    end
+
     def self.load(name, template_dir)
       template_dir ||= 'templates/'
       filename = File.join(template_dir, "#{name}.erb")
@@ -382,6 +389,7 @@ module OpenhabGenerator
       @things_header = @settings&.dig('things', 'header') || ''
       @output = {}
       @duplicate_items = {}
+      Template.clear
     end
 
     #
