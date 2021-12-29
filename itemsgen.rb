@@ -346,6 +346,11 @@ module OpenhabGenerator
       name.split('_')
     end
 
+    # override the global groups from openhab-jruby
+    def groups
+      @details['groups']
+    end
+
     # return the missing method/variable from the details data
     def method_missing(method, *args)
       if @details.respond_to? method
