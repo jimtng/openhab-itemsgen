@@ -418,7 +418,7 @@ module OpenhabGenerator
         Device.output(id, details, template_dir: @template_dir).tap { |out| yield(id, details, out) if block_given? }
       end.transpose
 
-      { 'things' => output[0], 'items' => output[1] }
+      { 'things' => output[0].reject(&:empty?), 'items' => output[1].reject(&:empty?) }
     end
 
     def format_content(type, content)
