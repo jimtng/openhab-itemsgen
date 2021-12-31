@@ -399,7 +399,7 @@ module OpenhabGenerator
     #
     def generate
       render_devices(@devices) { |id, data, output| yield(id, data, output) if block_given? }
-        .map { |type, value| [type, format_content(type, value).prepend(header_for_type(type))] }
+        .map { |type, value| [type, format_content(type, value).prepend(header_for_type(type)).concat("\n")] }
         .to_h
         .tap { Templates.clear }
     end
