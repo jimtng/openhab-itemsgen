@@ -160,6 +160,12 @@ Thing mqtt:topic:mosquitto:<%= thingid %> (mqtt:broker:mosquitto) {
         Type number : battery      [ stateTopic="zigbee/<%= thingid %>/battery" ]
 }
 
+# Include another file
+<%= render 'common-items.inc.erb' %>
+```
+
+`common-items.inc.erb`:
+```ruby
 Contact <%= name %>_State   "<%= label %>"  <<%= icon || 'door' %>>     <%= make_groups groups, 'gContactSensor' %> <%= tags&.tags %> { channel="mqtt:topic:mosquitto:<%= thingid %>:contact"<%= metadata&.metadata %> }
 Number  <%= name %>_Link    "<%= label %> Link"      <network> (gSignalStrength) { channel="mqtt:topic:mosquitto:<%= thingid %>:linkquality" }
 Number  <%= name %>_Battery "<%= label %> Battery [%d%%]" <battery> (gBatteries) { channel="mqtt:topic:mosquitto:<%= thingid %>:battery", expire="1h" }
@@ -183,6 +189,7 @@ These helper methods are available to make writing templates easier. They accept
 | `make_metadata` | convert the supplied arguments into the metadata syntax: comma separated and enclosed in braces, i.e. `{xxx, yyy}`                                                                                                                                                                                                                                                        |
 | `add_metadata`  | If you've already had a hard coded metadata and would like to add more from an array, `add_metadata` will join the array with a comma and prepend it with a comma. Example: `{channel="this is a hard coded channel"<%= add_metadata 'elem1="somedata"', 'elem2="anotherthing"' %>}` => `{channel="this is a hard coded channel", elem1="somedata", elem2="anotherthing"` |
 | `quote`         | enclose the given string with a double quote, or return a blank, unquoted string when the argument is an empty string or nil                                                                                                                                                                                                                                              |
+| `render`        | parse the given file and return the result to be included in the current template. If no path is specified, it will look in the same template directory.                                                                                                                                                                                                                  |
 
 #### Example:
 

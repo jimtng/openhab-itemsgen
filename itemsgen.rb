@@ -3,8 +3,11 @@
 
 require 'yaml'
 require 'erb'
+require 'pathname'
 
 module OpenhabGenerator
+  VERSION = '0.0.2'
+
   # Helper Methods that can be used inside a template
   #
   module HelperMethods
@@ -118,6 +121,21 @@ module OpenhabGenerator
         # end
       end
     end
+
+    #
+    # A helper method that can be used from inside the template to "include" another template
+    # To use it <%= render 'another-template.erb' %>
+    #
+    # @param [String] path template file to be included. Defaults to the same path as the template
+    #
+    # @return [String] the rendered template to be included with <%= %>
+    #
+    def render(path)
+      path = Pathname.new(path.to_s) unless path.is_a? Pathname
+      dir = path.dirname.to_s
+      dir = template_dir if dir == '.'
+      Templates.get(path.basename.to_s, template_dir: dir).result(binding)
+    end
   end
 
   # Template caching and path resolution
@@ -145,7 +163,8 @@ module OpenhabGenerator
 
     def self.load(name, template_dir)
       template_dir ||= 'templates/'
-      filename = File.join(template_dir, "#{name}.erb")
+      name.concat('.erb') unless name.end_with? '.erb'
+      filename = File.join(template_dir, name.to_s)
       template = File.read(filename)
       ERB.new(template, trim_mode: '%>')
     end
@@ -302,6 +321,8 @@ module OpenhabGenerator
   class Device
     include HelperMethods
 
+    attr_reader :template_dir
+
     def initialize(id, details)
       raise KeyError, "No template was specified for #{id}" unless details['template']
 
@@ -322,6 +343,7 @@ module OpenhabGenerator
     end
 
     def parse(template_dir: nil)
+      @template_dir = template_dir
       template_obj(template_dir: template_dir).result(binding)
     end
 
@@ -460,6 +482,7 @@ module OpenhabGenerator
   end
 end
 
+# Running from the command line
 if __FILE__ == $PROGRAM_NAME
   def overwrite_ok?(filename, force)
     if !force && File.exist?(filename)
@@ -474,7 +497,8 @@ if __FILE__ == $PROGRAM_NAME
 
   options = {}
   optparser = OptionParser.new do |opt|
-    opt.banner = "Usage: #{$PROGRAM_NAME} [options] yamlfile"
+    opt.banner = "OpenHAB Things and Items Generator #{OpenhabGenerator::VERSION}\n\n"\
+                 "Usage: #{$PROGRAM_NAME} [options] yamlfile"
     opt.on('-t', '--things THINGS_FILE', 'The path to things file output') { |o| options[:things_file] = o }
     opt.on('-i', '--items  ITEMS_FILE', 'The path to items file output') { |o| options[:items_file] = o }
     opt.on('-v', '--verbose', 'Print details') { |o| options[:verbose] = o }
