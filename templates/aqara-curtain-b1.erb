@@ -1,0 +1,18 @@
+
+Thing mqtt:topic:<%= thingid %> "<%= label %>" (mqtt:broker:mosquitto) [ availabilityTopic="zigbee/<%= thingid %>/availability", payloadAvailable="online", payloadNotAvailable="offline" ] {
+    Channels:
+        Type rollershutter: position [ stateTopic="zigbee/<%= thingid %>/position", commandTopic="zigbee/<%= thingid %>/set/position", autoupdate="false" ]
+        Type string: command         [ commandTopic="zigbee/<%= thingid %>/set" ]
+        Type switch: running         [ stateTopic="zigbee/<%= thingid %>/running", on="true", off="false" ]   
+        Type number: linkquality     [ stateTopic="zigbee/<%= thingid %>/linkquality" ]
+        Type contact: availability   [ stateTopic="zigbee/<%= thingid %>/availability", on="online", off="offline" ]
+}
+
+
+Group <%= name %>  <%= make_groups groups %> ["Blinds"] <%= make_metadata metadata, 'synonyms="curtain"', 'alexa="Curtain"' %>
+
+Rollershutter <%= name %>_Position "<%= label %>" <%= make_groups name, position['groups'] %> <%= make_tags tags, 'Control', 'Opening' %>   { channel="mqtt:topic:<%= thingid %>:position", ga="Curtain", alexa="Curtain.RangeValue" [capabilityNames="@Setting.Position", supportedRange="0:100:1", unitOfMeasure="Percent", actionMappings="Close=100,Open=0", stateMappings="Closed=100,Open=0"] }
+String <%= name %>_Command <%= make_groups name %> <%= make_tags 'Control', 'Command' %> { channel="mqtt:topic:<%= thingid %>:command" }
+Switch <%= name %>_Running <%= make_groups name %> ["Status"] { channel="mqtt:topic:<%= thingid %>:running" }
+Number <%= name %>_Link    "<%= label %> Link"      <network>  <%= make_groups name, 'gSignalStrength' %>  { channel="mqtt:topic:<%= thingid %>:linkquality" }
+Contact <%= name %>_Availability "<%= label %> Availability [MAP(availability.map):%s]" <%= make_groups name, 'gAvailability' %> { channel="mqtt:topic:<%= thingid %>:availability" }

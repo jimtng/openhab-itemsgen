@@ -11,7 +11,7 @@
         label: Label for Switch 2
         groups: (gSomethingForSwitch2)
 %>
-Thing mqtt:topic:mosquitto:<%= thingid %> (mqtt:broker:mosquitto) {
+Thing mqtt:topic:<%= thingid %> "<%= label %>" (mqtt:broker:mosquitto) [ availabilityTopic="tele/<%= thingid %>/LWT", payloadAvailable="Online", payloadNotAvailable="Offline" ] {
     Channels:
 <% switches.each.with_index(1) do |_switch, index|  
         index = '' if switches.length == 1 %>
@@ -21,24 +21,18 @@ Thing mqtt:topic:mosquitto:<%= thingid %> (mqtt:broker:mosquitto) {
 <% buttons&.each&.with_index(1) do |item, index| %>
         Type string : button<%= index %>   [ stateTopic="stat/<%= thingid %>/RESULT", transformationPattern="REGEX:(.*Button<%= index %>.*)∩JSONPATH:$.Button<%= index %>.Action", commandTopic="stat/<%= thingid %>/BUTTON<%= index %>", formatBeforePublish="{\"ACTION\":\"%s\", \"FROM\":\"OpenHAB\"}" ]
 <% end %>
-        Type contact: availability [ stateTopic="tele/<%= thingid %>/LWT", on="Online", off="Offline" ]
-        Type number : rssi      [ stateTopic="tele/<%= thingid %>/STATE", transformationPattern="JSONPATH:$.Wifi.RSSI" ]
-        Type string : ipaddress [ stateTopic="stat/<%= thingid %>/STATUS5", transformationPattern="JSONPATH:$..StatusNET.IPAddress", commandTopic="cmnd/<%= thingid %>/status" ]
-        Type string : state     [ stateTopic="tele/<%= thingid %>/dummy", commandTopic="cmnd/<%= thingid %>/STATE" ]
+        <%= render 'tasmota-common-things.inc.erb' %>
+
 }
 
 // Template: <%= template_name %>
 
 <% switches.each.with_index(1) do |switch, index|  
         index = '' if switches.length == 1 %>
-Switch <%= switch['name'] %> "<%= humanize(switch['label'] || switch['name']) %>" <%= switch['icon'] || '<switch>' %> <%= make_groups groups, switch['groups'] %> <%= make_tags tags, switch['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:power<%= index %>", autoupdate="false"<%= add_metadata metadata, switch['metadata'] %> }
+Switch <%= switch['name'] %> "<%= humanize(switch['label'] || switch['name']) %>" <%= switch['icon'] || '<switch>' %> <%= make_groups groups, switch['groups'] %> <%= make_tags tags, switch['tags'] %> { channel="mqtt:topic:<%= thingid %>:power<%= index %>", autoupdate="false"<%= add_metadata metadata, switch['metadata'] %> }
 <% end %>
 
 <% buttons&.each&.with_index(1) do |item, index| %>
-String <%= item['name'] %> "<%= item['label'] %>" <%= make_groups item['groups'] %> <%= make_tags item['tags'] %> { channel="mqtt:topic:mosquitto:<%= thingid %>:button<%= index %>"<%= add_metadata item['metadata'] %> }
+String <%= item['name'] %> <%= quote item['label'] %> <%= make_groups item['groups'] %> <%= make_tags item['tags'] %> { channel="mqtt:topic:<%= thingid %>:button<%= index %>"<%= add_metadata item['metadata'] %> }
 <% end %>
-
-Number <%= name %>_RSSI   "<%= label %> RSSI [%d%%]"  <network> (gSignalStrength)  { channel="mqtt:topic:mosquitto:<%= thingid %>:rssi" }
-String <%= name %>_State	(gTasmotaState)                            { channel="mqtt:topic:mosquitto:<%= thingid %>:state", id="<%= thingid %>" }
-String <%= name %>_IPAddress (gTasmotaIPs)     { channel="mqtt:topic:mosquitto:<%= thingid %>:ipaddress", autoupdate="false" }
-Contact <%= name %>_Availability "<%= label %> Availability [MAP(availability.map):%s]" (gAvailability) { channel="mqtt:topic:mosquitto:<%= thingid %>:availability" }
+<%= render 'tasmota-common-items.inc.erb' %>

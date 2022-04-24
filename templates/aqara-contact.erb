@@ -1,4 +1,4 @@
-Thing mqtt:topic:mosquitto:<%= thingid %> (mqtt:broker:mosquitto) {
+Thing mqtt:topic:<%= thingid %> "<%= label %>" (mqtt:broker:mosquitto) [ availabilityTopic="zigbee/<%= thingid %>/availability", payloadAvailable="online", payloadNotAvailable="offline" ] {
     Channels:
         Type contact: contact      [ stateTopic="zigbee/<%= thingid %>/contact", on="false", off="true"  ]
         Type number : linkquality  [ stateTopic="zigbee/<%= thingid %>/linkquality" ]
@@ -8,7 +8,7 @@ Thing mqtt:topic:mosquitto:<%= thingid %> (mqtt:broker:mosquitto) {
 
 // Template: <%= template_name %>
 
-Contact <%= name %>_State   "<%= label %>"  <<%= icon || 'door' %>>     <%= make_groups groups, 'gContactSensor' %> <%= make_tags tags %> { channel="mqtt:topic:mosquitto:<%= thingid %>:contact"<%= add_metadata metadata %> }
-Number  <%= name %>_Link    "<%= label %> Link"      <network> (gSignalStrength) { channel="mqtt:topic:mosquitto:<%= thingid %>:linkquality" }
-Number  <%= name %>_Battery "<%= label %> Battery [%d%%]" <battery> (gBatteries) { channel="mqtt:topic:mosquitto:<%= thingid %>:battery", expire="1h" }
-Contact <%= name %>_Availability "<%= label %> Availability [MAP(availability.map):%s]" (gAvailability) { channel="mqtt:topic:mosquitto:<%= thingid %>:availability" }
+Contact <%= name %>_State   "<%= label %>"  <<%= icon || 'door' %>>     <%= make_groups groups, 'gContactSensors' %> <%= make_tags tags %> { channel="mqtt:topic:<%= thingid %>:contact"<%= add_metadata metadata %> }
+Number  <%= name %>_Link    "<%= label %> Link"      <network> (gSignalStrength) { channel="mqtt:topic:<%= thingid %>:linkquality" }
+Number  <%= name %>_Battery "<%= label %> Battery [%d%%]" <battery> (gBatteries) { channel="mqtt:topic:<%= thingid %>:battery", expire="1h" }
+Contact <%= name %>_Availability "<%= label %> Availability [MAP(availability.map):%s]" (gAvailability) { channel="mqtt:topic:<%= thingid %>:availability" }

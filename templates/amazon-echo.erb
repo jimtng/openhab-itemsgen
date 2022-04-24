@@ -1,0 +1,60 @@
+// Template name: <%= template_name %>
+
+Group <%= name %> <player>
+// Player control
+Player <%= name %>_Player                 "Player"                                (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:player"}
+Dimmer <%= name %>_Volume                 "Volume [%.0f %%]" <soundvolume>        (<%= name %>, gEchoVolume) {channel="amazonechocontrol:echo:<%= thingid %>:volume"}
+Number <%= name %>_Treble                 "Treble"                                (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:equalizerTreble"}
+Number <%= name %>_Midrange               "Midrange"                              (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:equalizerMidrange"}
+Number <%= name %>_Bass                   "Bass"                                  (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:equalizerBass"}
+Switch <%= name %>_Shuffle                "Shuffle"                               (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:shuffle"}
+
+// Media channels
+Dimmer <%= name %>_MediaProgress          "Media progress"                        (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:mediaProgress"}
+Number:Time <%= name %>_MediaProgressTime "Media progress time [%d %unit%]"       (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:mediaProgressTime"}
+Number:Time <%= name %>_MediaLength       "Media length [%d %unit%]"              (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:mediaLength"}
+
+// Player Information
+String <%= name %>_ImageUrl               "Image URL"                             (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:imageUrl"}
+String <%= name %>_Title                  "Title"                                 (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:title"}
+String <%= name %>_Subtitle1              "Subtitle 1"                            (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:subtitle1"}
+String <%= name %>_Subtitle2              "Subtitle 2"                            (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:subtitle2"}
+String <%= name %>_ProviderDisplayName    "Provider"                              (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:providerDisplayName"}
+
+// Music provider and start command
+String <%= name %>_MusicProviderId        "Music Provider Id"                     (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:musicProviderId"}
+String <%= name %>_PlayMusicCommand       "Play music voice command (Write Only)" (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:playMusicVoiceCommand"}
+String <%= name %>_StartCommand           "Start Information"                     (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:startCommand"}
+
+// TuneIn Radio
+String <%= name %>_RadioStationId         "TuneIn Radio Station Id"               (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:radioStationId"}
+Switch <%= name %>_Radio                  "TuneIn Radio"                          (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:radio"}
+
+// Amazon Music
+String <%= name %>_AmazonMusicTrackId     "Amazon Music Track Id"                 (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:amazonMusicTrackId"}
+String <%= name %>_AmazonMusicPlayListId  "Amazon Music Playlist Id"              (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:amazonMusicPlayListId"}
+Switch <%= name %>_AmazonMusic            "Amazon Music"                          (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:amazonMusic"}
+
+// Bluetooth
+String <%= name %>_BluetoothMAC           "Bluetooth MAC Address" <bluetooth>     (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:bluetoothMAC"}
+Switch <%= name %>_Bluetooth              "Bluetooth"             <bluetooth>     (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:bluetooth"}
+String <%= name %>_BluetoothDeviceName    "Bluetooth Device"      <bluetooth>     (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:bluetoothDeviceName"}
+
+// Commands
+String <%= name %>_Announcement          "Announcement"                          (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:announcement"}
+String <%= name %>_TTS                   "Text to Speech"                        (<%= name %>, gEchoTTS) {channel="amazonechocontrol:echo:<%= thingid %>:textToSpeech"}
+Dimmer <%= name %>_TTS_Volume            "Text to Speech Volume"                 (<%= name %>, gEchoTTSVolume) {channel="amazonechocontrol:echo:<%= thingid %>:textToSpeechVolume"}
+String <%= name %>_Remind                "Remind"                                (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:remind"}
+String <%= name %>_PlayAlarmSound        "Play Alarm Sound"                      (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:playAlarmSound"}
+String <%= name %>_StartRoutine          "Start Routine"                         (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:startRoutine"}
+Dimmer <%= name %>_NotificationVolume    "Notification volume"                   (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:notificationVolume"}
+Switch <%= name %>_AscendingAlarm        "Ascending alarm"                           (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:ascendingAlarm"}
+
+// Feedbacks
+String <%= name %>_LastVoiceCommand          "Last voice command"                (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:lastVoiceCommand"}
+DateTime <%= name %>_NextReminder             "Next reminder"                     (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:nextReminder"}
+DateTime <%= name %>_NextAlarm                "Next alarm"                        (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:nextAlarm"}
+DateTime <%= name %>_NextMusicAlarm           "Next music alarm"                  (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:nextMusicAlarm"}
+DateTime <%= name %>_NextTimer                "Next timer"                        (<%= name %>) {channel="amazonechocontrol:echo:<%= thingid %>:nextTimer"}
+
+
