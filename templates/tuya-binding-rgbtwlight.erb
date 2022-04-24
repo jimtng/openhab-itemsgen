@@ -1,18 +1,3 @@
-// Thing mqtt:topic:<%= thingid %> "<%= label %>" (mqtt:broker:mosquitto) [ availabilityTopic="tuya/<%= thingid %>/status", payloadAvailable="online", payloadNotAvailable="offline" ] {
-Thing mqtt:topic:<%= thingid %> "<%= label %>" (mqtt:broker:mosquitto) {
-    Channels:
-        Type switch : power	 [ stateTopic="tuya/<%= thingid %>/state", commandTopic="tuya/<%= thingid %>/command" ]
-        Type dimmer : dimmer     [ stateTopic="tuya/<%= thingid %>/white_brightness_state", commandTopic="tuya/<%= thingid %>/white_brightness_command" ]
-<% if key? 'ct' %>
-        Type dimmer : ct         [ stateTopic="tuya/<%= thingid %>/color_temp_state", commandTopic="tuya/<%= thingid %>/color_temp_command", min=154, max=400, step=1 ]
-<% end %>
-<% if key? 'color' %>
-        Type string : color      [ stateTopic="stat/<%= thingid %>/RESULT", transformationPattern="REGEX:(.*Color.*)∩JSONPATH:$.Color", commandTopic="cmnd/<%= thingid %>/Color" ]
-        Type colorHSB : colorhsb [ stateTopic="tuya/<%= thingid %>/hsb_state", commandTopic="tuya/<%= thingid %>/hsb_command" ]
-<% end %>
-        Type contact: availability [ stateTopic="tuya/<%= thingid %>/status", on="online", off="offline" ]
-}
-
 <%
 
 # Return the assistant tags or empty string based on "assistant_tags" value from yaml
@@ -27,7 +12,7 @@ end
 Group <%= group_name %> "<%= label %>" <light> <%= make_groups groups %> <%= make_tags 'Lightbulb', tags %>  <%= make_metadata assistant_tags(%w[ga="Light" alexa="Light"]), metadata %>
 
 Switch <%= name %>  "<%= label %> Power" <light> <%= make_groups group_name, power['groups'] %> <%= make_tags %w[Control Power], power['tags'] %> { channel="mqtt:topic:<%= thingid %>:power", autoupdate="false"<%= add_metadata assistant_tags(%w{ga="lightPower" alexa="PowerState"}), power['metadata'] %> }
-Dimmer <%= name %>_Dimmer "<%= label %>" <%= make_groups group_name, dimmer['groups'], 'gDimmers' %> <%= make_tags %w[Control Light], dimmer['tags'] %> { channel="mqtt:topic:<%= thingid %>:dimmer"<%= add_metadata assistant_tags(%w{ga="lightBrightness" alexa="Brightness"}), dimmer['metadata'] %> }
+Dimmer <%= name %>_Dimmer "<%= label %>" <%= make_groups group_name, dimmer['groups'] %> <%= make_tags %w[Control Light], dimmer['tags'] %> { channel="mqtt:topic:<%= thingid %>:dimmer"<%= add_metadata assistant_tags(%w{ga="lightBrightness" alexa="Brightness"}), dimmer['metadata'] %> }
 <% if key? 'ct' %>
 Dimmer <%= name %>_CT     "<%= label %> CT" <%= make_groups group_name, ct['groups'] %> <%= make_tags %w[Control ColorTemperature], ct['tags'] %> { channel="mqtt:topic:<%= thingid %>:ct"<%= add_metadata assistant_tags(['ga="lightColorTemperature"', 'alexa="ColorTemperature']), ct['metadata'] %> }
 <% end %>

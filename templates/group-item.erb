@@ -1,0 +1,8 @@
+<%# 
+This template is for creating a virtual Equipment group for single-item points. For example,
+a smart wall switch that controls a dumb light is set as a Point:Power with 
+
+Or it can be used to make any group, since it supports all the fields
+name, label, icon, groups, tags, and metadata
+%>
+Group <%= name %> "<%= label %>" <%= "<#{icon}>" if icon %> <%= make_groups groups %> <%= make_tags tags %> <%= make_metadata metadata %> 

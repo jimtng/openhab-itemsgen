@@ -1,0 +1,32 @@
+Group        <%= name %>                      "<%= label %>"                       <%= make_groups groups %>                        ["Television"]
+{
+  ga="TV" [
+    volumeMaxLevel="100", 
+    transportControlSupportedCommands="LEFT,RIGHT,UP,DOWN,ENTER,BACK,EXIT,HOME,RED,GREEN,YELLOW,BLUE,PLAY,PAUSE,STOP", 
+    availableApplications="cdp-30=Plex,com.disney.disneyplus-prod=Disney:Disney+:Disney Plus,netflix=Netflix,amazon=Amazon:Amazon Prime:Prime Video:Amazon Video,youtube.leanback.v4=Youtube,stan.webos2=Stan,sbs=SBS:SBS On Demand,spotify-beehive=Spotify,com.appgeneration.app.radiobymytuner=My Tuner,com.webos.app.livetv=TV,com.webos.app.tvguide=TV Guide"
+  ], 
+  alexa="TV",
+  synonyms="TV, television",
+  id="lgwebos:WebOSTV:<%= thingid %>"
+}
+
+Switch       <%= name %>_Power                "Power"                <switch>            (<%= name %>, gTVPower)            ["Control", "Power"]        {channel="lgwebos:WebOSTV:<%= thingid %>:power", autoupdate="false", ga="tvPower", alexa="PowerState"}
+Switch       <%= name %>_Mute                 "Mute"                 <soundvolume_mute>  (<%= name %>)                      ["Control"]                 {channel="lgwebos:WebOSTV:<%= thingid %>:mute", ga="tvMute", alexa="MuteState"}
+Switch       <%= name %>_MuteBriefly          "Mute for 1min"                            (<%= name %>, gTVQuickMute)
+Dimmer       <%= name %>_Volume               "Volume [%S]"          <soundvolume>       (<%= name %>, gTVVolume)           ["Setpoint", "SoundVolume"] {channel="lgwebos:WebOSTV:<%= thingid %>:volume", ga="tvVolume", alexa="VolumeLevel"}
+Number       <%= name %>_Volume_Dummy         "VolumeUpDown"                             (<%= name %>, gTVDummyVolume)
+String       <%= name %>_Channel              "Channel"                                  (<%= name %>)                      ["Control"]                 {channel="lgwebos:WebOSTV:<%= thingid %>:channel", ga="tvChannel", alexa="Channel"}
+Number       <%= name %>_Channel_Dummy        "ChannelUpDown"                            (<%= name %>, gTVChannel)          ["Control"]                 {tvid="lgwebos:WebOSTV:<%= thingid %>"}
+String       <%= name %>_ChannelName          "Channel [%S]"                             (<%= name %>)                      ["Status"]                  {channel="lgwebos:WebOSTV:<%= thingid %>:channelName"}
+String       <%= name %>_Toast                                                           (<%= name %>, gTVToasts)           ["Control", "Toast"]        {channel="lgwebos:WebOSTV:<%= thingid %>:toast"}
+Switch       <%= name %>_Stop                 "Stop"                                     (<%= name %>)                                                  {channel="lgwebos:WebOSTV:<%= thingid %>:mediaStop", autoupdate="false", alexa="PlaybackStop"}
+String       <%= name %>_Application          "Application [%s]"                         (<%= name %>, gTVApplication)      ["Status"]                  {channel="lgwebos:WebOSTV:<%= thingid %>:appLauncher", ga="tvApplication", alexa="Mode" [capabilityNames="App, Application"]}
+Player       <%= name %>_Player               "Media Player"         <mediacontrol>      (<%= name %>, gTVPlayers)          ["Control", "Player"]       {channel="lgwebos:WebOSTV:<%= thingid %>:mediaPlayer", alexa="Playback"}
+String       <%= name %>_RCButton             "RC Button"                                (<%= name %>)                                                  {channel="lgwebos:WebOSTV:<%= thingid %>:rcButton", ga="tvTransport"}
+Switch       <%= name %>_Power_OFF_IN_15_Min  "<%= room_name %> T15"  <switch>           (<%= name %>, gItemCommandTimers)                              {ga="Switch", synonyms="T15", duration="15m"}
+Switch       <%= name %>_Power_OFF_IN_7_Min   "<%= room_name %> T7"   <switch>           (<%= name %>, gItemCommandTimers)                              {ga="Switch", synonyms="T7" , duration="7m"}
+Switch       <%= name %>_Power_OFF_IN_5_Min   "<%= room_name %> T5"   <switch>           (<%= name %>, gItemCommandTimers)                              {ga="Switch", synonyms="T5" , duration="5m"}
+Switch       <%= name %>_Power_OFF_IN_2_Min   "<%= room_name %> T2"   <switch>           (<%= name %>, gItemCommandTimers)                              {ga="Switch", synonyms="T2" , duration="2m"}
+Switch       <%= name %>_Power_OFF_IN_1_Min   "<%= room_name %> T1"   <switch>           (<%= name %>, gItemCommandTimers)                              {ga="Switch", synonyms="T1" , duration="1m"}
+Number:Time  <%= name %>_Timer                "<%= room_name %> TV Timer [%d min]"       (<%= name %>, gTVTimers)
+Switch       <%= name %>_Lock                 "<%= room_name %> TV Lock"                 (<%= name %>, gTVLock)                                         {ga="Switch", alexa="Switch"}

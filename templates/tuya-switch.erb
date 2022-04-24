@@ -1,0 +1,19 @@
+Thing mqtt:topic:<%= thingid %> "<%= label %>" (mqtt:broker:mosquitto) [ availabilityTopic="tuya/<%= thingid %>/status", payloadAvailable="online", payloadNotAvailable="offline" ] {
+    Channels:
+        Type switch : power	 [ stateTopic="tuya/<%= thingid %>/state", commandTopic="tuya/<%= thingid %>/command" ]
+        Type contact: availability [ stateTopic="tuya/<%= thingid %>/status", on="online", off="offline" ]
+}
+
+<%
+
+# Return the assistant tags or empty string based on "assistant_tags" value from yaml
+def assistant_tags(str)
+  omit_assistant_tags ? '' : str
+end
+
+%>
+// Template: <%= template_name %>
+
+Switch <%= name %>  "<%= label %>" <switch> <%= make_groups groups %> <%= make_tags 'PowerOutlet', tags %> { channel="mqtt:topic:<%= thingid %>:power", autoupdate="false"<%= add_metadata assistant_tags(%w{ga="Switch" alexa="Switch"}), metadata %> }
+Contact <%= name %>_Availability "<%= label %> Availability [MAP(availability.map):%s]" <%= make_groups 'gAvailability' %> { channel="mqtt:topic:<%= thingid %>:availability" }
+

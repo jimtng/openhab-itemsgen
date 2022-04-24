@@ -1,0 +1,5 @@
+Number <%= name %>_RSSI   "<%= label %> RSSI [%d%%]" <network> <%= make_groups group_name, 'gSignalStrength' %>  { channel="mqtt:topic:<%= thingid %>:rssi" }
+String <%= name %>_State <%= make_groups group_name, 'gTasmotaState' %>     { channel="mqtt:topic:<%= thingid %>:state", id="<%= thingid %>" }
+String <%= name %>_IPAddress <%= make_groups group_name, 'gTasmotaIPs' %>     { channel="mqtt:topic:<%= thingid %>:ipaddress", autoupdate="false" }
+Contact <%= name %>_Availability "<%= label %> Availability [MAP(availability.map):%s]" <%= make_groups group_name, 'gAvailability' %> { channel="mqtt:topic:<%= thingid %>:availability" }
+String <%= name %>_Command <%=make_groups  group_name %> { channel="mqtt:topic:<%= thingid %>:command" }

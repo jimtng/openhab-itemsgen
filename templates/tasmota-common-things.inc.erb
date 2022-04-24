@@ -1,0 +1,5 @@
+Type number : rssi	                [ stateTopic="tele/<%= thingid %>/STATE", transformationPattern="JSONPATH:$.Wifi.RSSI" ]
+Type string : state      [ stateTopic="tele/<%= thingid %>/dummy", commandTopic="cmnd/<%= thingid %>/STATE" ]
+Type string : ipaddress [ stateTopic="stat/<%= thingid %>/STATUS5", transformationPattern="JSONPATH:$..StatusNET.IPAddress", commandTopic="cmnd/<%= thingid %>/status" ]
+Type contact: availability [ stateTopic="tele/<%= thingid %>/LWT", on="Online", off="Offline" ]
+Type string : command    [ stateTopic="stat/<%= thingid %>/result", commandTopic="cmnd/<%= thingid %>/backlog" ]
